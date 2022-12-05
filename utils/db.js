@@ -2,8 +2,6 @@ import knex from 'knex';
 import * as dotenv from 'dotenv'
 dotenv.config();
 
-console.log(process.env.PG_CONNECTION_STRING);
-
 export default knex({
     client: 'pg',
     connection:{
