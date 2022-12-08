@@ -1,13 +1,16 @@
-import db from '../utils/db.js';
+import db from '../utils/db.js'
 
-export default function (tableName, idField) {
+export default function (tableName) {
   return {
-    findAll() {
-      return db(tableName);
+    findAll (viewModel) {
+      return db(tableName).select(viewModel)
     },
 
-    add(entity) {
-      return db(tableName).insert(entity).returning(idField);
+    add (entity, viewModel) {
+      return db(tableName).insert(entity).returning(viewModel)
+    },
+    update (id, entity, viewModel) {
+      return db(tableName).where({ id }).update(entity).returning(viewModel)
     }
   }
 }

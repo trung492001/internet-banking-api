@@ -1,2 +1,2 @@
-import generate from './generic.model.js';
-export default generate('Account', 'id');
+import generate from './generic.model.js'
+export default generate('Account', 'id')

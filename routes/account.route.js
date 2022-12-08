@@ -1,22 +1,44 @@
-import express from 'express';
-import accountModel from '../models/account.model.js';
+import express from 'express'
+import accountModel from '../models/account.model.js'
+import db from '../utils/db.js'
+import { accountViewModel } from '../view_models/account.viewModel.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.get('/', async function (req, res) {
-  console.log('a');
-  const list = await accountModel.findAll();
-  res.json(list);
-});
+router.post('/DepositAccount', async (req, res) => {
+  const data = req.body
+  if (data.user_name) {
+    const user = await db('User').where({ user_name: data.user_name }).first()
+    if (!user) {
+      res.status('200').json({ message: 'Không tìm thấy người dùng' })
+    }
 
-router.post('/', async function (req, res) {
-  let actor = req.body;
-  const ret = await accountModel.add(actor);
-  actor = {
-    actor_id: ret[0],
-    ...actor
+    let account = await db('Account').where({ user_id: user.id }).first()
+    if (!account) {
+      res.status('200').json({ message: 'Không tìm thấy tài khoản của người dùng' })
+    }
+    account = {
+      ...account,
+      balance: data.balance
+    }
+
+    const ret = await accountModel.update(account.id, account, accountViewModel)
+
+    res.status('200').json(ret)
+  } else if (data.account_number) {
+    let account = await db('Account').where({ number: data.account_number })
+    if (!account) {
+      res.status('200').json({ message: 'Không tìm thấy tài khoản của người dùng' })
+    }
+    account = {
+      ...account,
+      balance: data.balance
+    }
+
+    const ret = await accountModel.update(account.id, account, accountViewModel)
+
+    res.status('200').json(ret)
   }
-  res.status(201).json(actor);
-});
+})
 
-export default router;
+export default router

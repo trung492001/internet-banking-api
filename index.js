@@ -1,23 +1,25 @@
-import express from 'express';
-import morgan from 'morgan';
-import http from 'http';
+import express from 'express'
+import morgan from 'morgan'
+import http from 'http'
 
 import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
+import accountRoute from './routes/account.route.js'
 
-const app = express();
-app.use(express.json());
-app.use(morgan('dev'));
+const app = express()
+app.use(express.json())
+app.use(morgan('dev'))
 
-app.use('/Users', userRoute);
-app.use('/Roles', roleRoute);
+app.use('/Users', userRoute)
+app.use('/Roles', roleRoute)
+app.use('/Accounts', accountRoute)
 
-app.get('/', (req,res) => {
-    res.send('Hello World');
-});
+app.get('/', (req, res) => {
+  res.send('Hello World')
+})
 
-const PORT = process.env.PORT || 3030;
-const server = http.createServer(app);
+const PORT = process.env.PORT || 3030
+const server = http.createServer(app)
 server.listen(PORT, () => {
-    console.log(`Internet Banking API listening on port ${PORT}`);
-});
+  console.log(`Internet Banking API listening on port ${PORT}`)
+})
