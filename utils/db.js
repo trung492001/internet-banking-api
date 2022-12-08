@@ -8,7 +8,7 @@ export default knex({
         host : '127.0.0.1',
         port : 5432,
         user : 'postgres',
-        password : 'mismart123',
+        password : '123456',
         database : 'internet-banking'
     },
     searchPath: ['knex', 'public'],

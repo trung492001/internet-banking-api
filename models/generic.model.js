@@ -7,7 +7,7 @@ export default function (tableName, idField) {
     },
 
     add(entity) {
-      return db(tableName).insert(entity);
+      return db(tableName).insert(entity).returning(idField);
     }
   }
 }
