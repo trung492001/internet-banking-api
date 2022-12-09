@@ -2,9 +2,11 @@ import express from 'express'
 import accountModel from '../models/account.model.js'
 import db from '../utils/db.js'
 import { accountViewModel } from '../view_models/account.viewModel.js'
+import checkTokenMdw from '../middlewares/checkToken.mdw.js'
 
 const router = express.Router()
 
+router.use(checkTokenMdw)
 router.post('/DepositAccount', async (req, res) => {
   const data = req.body
   if (data.user_name) {
