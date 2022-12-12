@@ -6,6 +6,7 @@ import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
 import accountRoute from './routes/account.route.js'
 import refreshTokenRoute from './routes/refreshToken.router.js'
+import receiverRoute from './routes/receiver.route.js'
 
 const app = express()
 app.use(express.json())
@@ -15,6 +16,7 @@ app.use('/Users', userRoute)
 app.use('/Roles', roleRoute)
 app.use('/Accounts', accountRoute)
 app.use('/RefreshToken', refreshTokenRoute)
+app.use('/Receivers', receiverRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World')

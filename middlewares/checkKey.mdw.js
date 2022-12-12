@@ -5,6 +5,6 @@ export default (req, res, next) => {
   console.log(req)
   const stringKey = time + req.baseUrl + process.env.secret_key
   if (sha256(stringKey) === token) { next() } else {
-    return res.json({ status: 'success', elements: 'Secret Key Invalid!!!' })
+    return res.json('200').json({ message: 'Secret Key Invalid!!!' })
   }
 }

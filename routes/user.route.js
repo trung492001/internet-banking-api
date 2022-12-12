@@ -16,11 +16,17 @@ const userSchema = JSON.parse(await readFile(new URL('../schemas/user.json', imp
 const loginSchema = JSON.parse(await readFile(new URL('../schemas/login.json', import.meta.url)))
 
 router.post('/', validate(userSchema), async (req, res) => {
-  let user = req.body
+  let data = req.body
+
+  const oldUser = await db('User').where({ user_name: data.user_name }).first()
+
+  if (oldUser) {
+    return res.json('409').json({ message: 'User already exist' })
+  }
 
   const salt = await bcrypt.genSalt(10)
-  user.password = await bcrypt.hash(user.password, salt)
-  const ret = await userModel.add(user, 'id')
+  data.password = await bcrypt.hash(data.password, salt)
+  const ret = await userModel.add(data, 'id')
 
   const accountUUID = uuidv4()
   const startWith = '32'
@@ -33,11 +39,11 @@ router.post('/', validate(userSchema), async (req, res) => {
     is_payment_account: true,
     user_id: ret[0].id
   })
-  user = {
+  data = {
     id: ret[0].id,
-    ...user
+    ...data
   }
-  res.status(201).json(user)
+  res.status(201).json(data)
 })
 
 router.post('/Login', validate(loginSchema), async (req, res) => {
