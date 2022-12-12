@@ -13,6 +13,9 @@ export default function (tableName) {
     },
     find (fieldAndValue, viewModel) {
       return db(tableName).where(fieldAndValue).returning(viewModel).first()
+    },
+    delete (id) {
+      return db(tableName).where({ id }).delete()
     }
   }
 }
