@@ -68,7 +68,7 @@ CREATE TABLE "Receiver" (
 
 CREATE TABLE "TransferType" (
 	"id" serial NOT NULL,
-	"name" integer NOT NULL UNIQUE,
+	"name" VARCHAR(255) NOT NULL UNIQUE,
 	CONSTRAINT "TransferType_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
