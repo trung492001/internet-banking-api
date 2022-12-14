@@ -18,7 +18,7 @@ const loginSchema = JSON.parse(await readFile(new URL('../schemas/login.json', i
 router.post('/', validate(userSchema), async (req, res) => {
   let data = req.body
 
-  const oldUser = await db('User').where({ user_name: data.user_name }).first()
+  const oldUser = await db('Users').where({ user_name: data.user_name }).first()
 
   if (oldUser) {
     return res.json('409').json({ message: 'User already exist' })
@@ -27,18 +27,19 @@ router.post('/', validate(userSchema), async (req, res) => {
   const salt = await bcrypt.genSalt(10)
   data.password = await bcrypt.hash(data.password, salt)
   const ret = await userModel.add(data, 'id')
-
-  const accountUUID = uuidv4()
-  const startWith = '32'
-  const generator = Math.floor(Math.random() * 999999)
-  const accountNumber = startWith + generator
-  await accountModel.add({
-    number: accountNumber,
-    uuid: accountUUID,
-    balance: 0,
-    is_payment_account: true,
-    user_id: ret[0].id
-  })
+  if (data.role_id === 2) {
+    const accountUUID = uuidv4()
+    const startWith = '32'
+    const generator = Math.floor(Math.random() * 999999)
+    const accountNumber = startWith + generator
+    await accountModel.add({
+      number: accountNumber,
+      uuid: accountUUID,
+      balance: 0,
+      is_payment_account: true,
+      user_id: ret[0].id
+    })
+  }
   data = {
     id: ret[0].id,
     ...data
@@ -48,14 +49,14 @@ router.post('/', validate(userSchema), async (req, res) => {
 
 router.post('/Login', validate(loginSchema), async (req, res) => {
   const data = req.body
-  const ret = await db('User').where('user_name', data.user_name)
+  const ret = await db('Users').where('user_name', data.user_name)
   if (ret.length === 0) {
     return res.status('200').json({ message: 'User not found' })
   } else {
     const result = await bcrypt.compare(data.password, ret[0].password)
     if (result) {
       const resUser = ret[0]
-      const recordRefreshToken = await db('RefreshToken').where('user_id', resUser.id)
+      const recordRefreshToken = await db('RefreshTokens').where('user_id', resUser.id)
       const token = jwt.sign(resUser, _CONF.SECRET, { expiresIn: _CONF.tokenLife })
       const refreshToken = jwt.sign(resUser, _CONF.SECRET_REFRESH)
 

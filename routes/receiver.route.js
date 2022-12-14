@@ -62,7 +62,7 @@ router.delete('/:id', async (req, res) => {
 })
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
-  const receivers = await db('Receiver').where({ user_id: currentUser.id })
+  const receivers = await db('Receivers').where({ user_id: currentUser.id })
   return res.status('200').json(receivers)
 })
 

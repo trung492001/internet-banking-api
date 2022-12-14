@@ -12,7 +12,7 @@ router.post('/Refresh', async function (req, res) {
   const { refreshToken } = req.body
   // if refresh token exists
   console.log(new Date().toISOString())
-  const listRefreshToken = await db('RefreshToken').where('secret_key', refreshToken).where('expired_at', '>', new Date().toISOString())
+  const listRefreshToken = await db('RefreshTokens').where('secret_key', refreshToken).where('expired_at', '>', new Date().toISOString())
   console.log(listRefreshToken)
   if (refreshToken && listRefreshToken.length !== 0) {
     const record = listRefreshToken[0]
