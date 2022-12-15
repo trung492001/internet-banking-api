@@ -27,7 +27,7 @@ router.post('/DepositAccount', async (req, res) => {
     }
     account = {
       ...account,
-      balance: data.balance
+      balance: account.balance + data.balance
     }
 
     const ret = await accountModel.update(account.id, account, accountViewModel.split(' '))
@@ -40,7 +40,7 @@ router.post('/DepositAccount', async (req, res) => {
     }
     account = {
       ...account,
-      balance: data.balance
+      balance: account.balance + data.balance
     }
 
     const ret = await accountModel.update(account.id, account, accountViewModel.split(' '))

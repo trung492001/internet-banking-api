@@ -36,6 +36,8 @@ CREATE TABLE "Transactions" (
 	"note" VARCHAR(255) NOT NULL,
 	"amount" integer NOT NULL,
 	"is_paid_by_receiver" BOOLEAN NOT NULL,
+	"status_id" integer NOT NULL,
+	"code" VARCHAR(255) NOT NULL UNIQUE,
 	CONSTRAINT "Transactions_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
@@ -125,11 +127,22 @@ CREATE TABLE "RefreshTokens" (
 
 
 
+CREATE TABLE "TransactionStatuses" (
+	"id" serial NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
+	CONSTRAINT "TransactionStatuses_pk" PRIMARY KEY ("id")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
 ALTER TABLE "Accounts" ADD CONSTRAINT "Accounts_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 
 ALTER TABLE "Users" ADD CONSTRAINT "Users_fk0" FOREIGN KEY ("role_id") REFERENCES "Roles"("id") ON DELETE CASCADE;
 
 ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk0" FOREIGN KEY ("type_id") REFERENCES "TransferTypes"("id") ON DELETE CASCADE;
+ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk1" FOREIGN KEY ("status_id") REFERENCES "TransactionStatuses"("id") ON DELETE CASCADE;
 
 
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
@@ -154,3 +167,7 @@ insert into public."Banks"("name", "host") VALUES('SNEW Bank', '');
 insert into public."TransferTypes"("name") values('Transaction to receive money');
 insert into public."TransferTypes"("name") values('Transfer transaction');
 insert into public."TransferTypes" ("name") values('Debt reminder payment');
+
+insert into public."TransactionStatuses"("name") values('Pending');
+insert into public."TransactionStatuses"("name") values('Fail');
+insert into public."TransactionStatuses"("name") values('Success');
