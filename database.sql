@@ -29,6 +29,7 @@ CREATE TABLE "Users" (
 
 CREATE TABLE "Transactions" (
 	"id" serial NOT NULL,
+	"uuid" VARCHAR(255) NOT NULL,
 	"type_id" integer NOT NULL,
 	"source_account_uuid" VARCHAR(255) NOT NULL,
 	"destination_account_uuid" VARCHAR(255) NOT NULL,
