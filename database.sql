@@ -30,13 +30,13 @@ CREATE TABLE "Users" (
 CREATE TABLE "Transactions" (
 	"id" serial NOT NULL,
 	"uuid" VARCHAR(255) NOT NULL,
-	"type_id" integer NOT NULL,
 	"source_account_uuid" VARCHAR(255) NOT NULL,
 	"destination_account_uuid" VARCHAR(255) NOT NULL,
 	"created_at" TIMESTAMP NOT NULL,
 	"note" VARCHAR(255) NOT NULL,
 	"amount" integer NOT NULL,
-	"is_paid_by_receiver" BOOLEAN NOT NULL,
+	"fee_is_paid_by_receiver" BOOLEAN NOT NULL,
+	"debt_reminder_id" integer,
 	"status_id" integer NOT NULL,
 	"code" VARCHAR(255) NOT NULL UNIQUE,
 	CONSTRAINT "Transactions_pk" PRIMARY KEY ("id")
@@ -63,16 +63,6 @@ CREATE TABLE "Receivers" (
 	"account_number" VARCHAR(255) NOT NULL,
 	"bank_id" integer,
 	CONSTRAINT "Receivers_pk" PRIMARY KEY ("id")
-) WITH (
-  OIDS=FALSE
-);
-
-
-
-CREATE TABLE "TransferTypes" (
-	"id" serial NOT NULL,
-	"name" VARCHAR(255) NOT NULL UNIQUE,
-	CONSTRAINT "TransferTypes_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
 );
@@ -142,8 +132,8 @@ ALTER TABLE "Accounts" ADD CONSTRAINT "Accounts_fk0" FOREIGN KEY ("user_id") REF
 
 ALTER TABLE "Users" ADD CONSTRAINT "Users_fk0" FOREIGN KEY ("role_id") REFERENCES "Roles"("id") ON DELETE CASCADE;
 
-ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk0" FOREIGN KEY ("type_id") REFERENCES "TransferTypes"("id") ON DELETE CASCADE;
-ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk1" FOREIGN KEY ("status_id") REFERENCES "TransactionStatuses"("id") ON DELETE CASCADE;
+ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk0" FOREIGN KEY ("status_id") REFERENCES "TransactionStatuses"("id") ON DELETE CASCADE;
+ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk1" FOREIGN KEY ("debt_reminder_id") REFERENCES "DebtReminders"("id") ON DELETE CASCADE;
 
 
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
@@ -164,10 +154,6 @@ INSERT INTO public."Roles"("name") VALUES('Customer');
 INSERT INTO public."Roles"("name") VALUES('Employee');
 
 insert into public."Banks"("name", "host") VALUES('SNEW Bank', '');
-
-insert into public."TransferTypes"("name") values('Transaction to receive money');
-insert into public."TransferTypes"("name") values('Transfer transaction');
-insert into public."TransferTypes" ("name") values('Debt reminder payment');
 
 insert into public."TransactionStatuses"("name") values('Pending');
 insert into public."TransactionStatuses"("name") values('Fail');

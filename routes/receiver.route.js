@@ -18,19 +18,19 @@ router.use(currentUserMdw)
 router.post('/', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
-  const account = await accountModel.find({ number: data.account_number }, 'user_id id')
+  const account = await accountModel.fetch({ number: data.account_number }, 'user_id id')
   if (!account) {
     return res.status('200').json({ message: 'Không tìm thấy tài khoản' })
   }
   if (data.reminiscent_name === undefined || data.reminiscent_name === null || data.reminiscent_name === '') {
-    const user = await userModel.find({ id: account.user_id }, userViewModel.split(' '))
+    const user = await userModel.fetch({ id: account.user_id }, userViewModel.split(' '))
     if (!user) {
       return res.status('200').json({ message: 'Không tìm thấy người dùng' })
     }
     data.reminiscent_name = user.user_name
   }
   data.user_id = currentUser.id
-  const bank = await bankModel.find({ id: data.bank_id })
+  const bank = await bankModel.fetch({ id: data.bank_id })
   if (!bank) {
     return res.status('200').json({ message: 'Không tìm thấy ngân hàng' })
   }
@@ -42,7 +42,7 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const data = req.body
   const id = req.params.id
   console.log(id)
-  const oldReceiver = await receiverModel.find({ id, user_id: currentUser.id })
+  const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (!oldReceiver) {
     return res.status('200').json({ message: 'Không tìm thấy người nhận' })
   }
@@ -53,7 +53,7 @@ router.delete('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   const id = req.params.id
   console.log(id)
-  const oldReceiver = await receiverModel.find({ id, user_id: currentUser.id })
+  const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (!oldReceiver) {
     return res.status('200').json({ message: 'Không tìm thấy người nhận' })
   }

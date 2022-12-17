@@ -8,6 +8,7 @@ import accountRoute from './routes/account.route.js'
 import refreshTokenRoute from './routes/refreshToken.router.js'
 import receiverRoute from './routes/receiver.route.js'
 import transactionRoute from './routes/transaction.route.js'
+import debtReminderRoute from './routes/debtReminder.route.js'
 
 const app = express()
 app.use(express.json())
@@ -19,6 +20,7 @@ app.use('/Accounts', accountRoute)
 app.use('/RefreshToken', refreshTokenRoute)
 app.use('/Receivers', receiverRoute)
 app.use('/Transactions', transactionRoute)
+app.use('/DebtReminders', debtReminderRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World')

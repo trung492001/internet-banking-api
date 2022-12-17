@@ -16,7 +16,7 @@ router.post('/DepositAccount', async (req, res) => {
   }
   const data = req.body
   if (data.user_name) {
-    const user = await userModel.find({ user_name: data.user_name }, userViewModel.split(' '))
+    const user = await userModel.fetch({ user_name: data.user_name }, userViewModel.split(' '))
     if (!user) {
       res.status('200').json({ message: 'Không tìm thấy người dùng' })
     }

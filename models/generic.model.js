@@ -11,11 +11,14 @@ export default function (tableName) {
     update (id, entity, viewModel) {
       return db(tableName).where({ id }).update(entity).returning(viewModel)
     },
-    find (fieldAndValue, viewModel) {
-      return db(tableName).where(fieldAndValue).returning(viewModel).first()
+    fetch (fieldAndValue, viewModel) {
+      return db(tableName).select(viewModel).where(fieldAndValue)
     },
     delete (id) {
       return db(tableName).where({ id }).delete()
+    },
+    findOne (fieldAndValue, viewModel) {
+      return db(tableName).select(viewModel).where(fieldAndValue).limit(1)
     }
   }
 }
