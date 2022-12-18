@@ -76,6 +76,7 @@ CREATE TABLE "DebtReminders" (
 	"note" VARCHAR(255) NOT NULL,
 	"user_id" integer NOT NULL,
 	"isPaid" BOOLEAN NOT NULL,
+	"created_at" TIMESTAMP NOT NULL,
 	CONSTRAINT "DebtReminders_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
