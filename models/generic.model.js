@@ -18,7 +18,7 @@ export default function (tableName) {
       return db(tableName).where({ id }).delete()
     },
     findOne (fieldAndValue, viewModel) {
-      return db(tableName).select(viewModel).where(fieldAndValue).limit(1)
+      return db(tableName).select(viewModel).where(fieldAndValue).first()
     }
   }
 }

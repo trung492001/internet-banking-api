@@ -1,6 +1,5 @@
 import express from 'express'
 import accountModel from '../models/account.model.js'
-import db from '../utils/db.js'
 import { accountViewModel } from '../view_models/account.viewModel.js'
 import currentUserMdw from '../middlewares/currentUser.mdw.js'
 import userModel from '../models/user.model.js'
@@ -15,13 +14,13 @@ router.post('/DepositAccount', async (req, res) => {
     return res.status('403').json({ message: 'Không đủ quyền truy cập' })
   }
   const data = req.body
-  if (data.user_name) {
-    const user = await userModel.fetch({ user_name: data.user_name }, userViewModel.split(' '))
+  if (data.username) {
+    const user = await userModel.findOne({ username: data.username }, userViewModel)
     if (!user) {
       res.status('200').json({ message: 'Không tìm thấy người dùng' })
     }
 
-    let account = await db('Accounts').where({ user_id: user.id }).first()
+    let account = await accountModel.findOne({ user_id: user.id }, accountViewModel)
     if (!account) {
       res.status('200').json({ message: 'Không tìm thấy tài khoản của người dùng' })
     }
@@ -30,11 +29,11 @@ router.post('/DepositAccount', async (req, res) => {
       balance: account.balance + data.balance
     }
 
-    const ret = await accountModel.update(account.id, account, accountViewModel.split(' '))
+    const ret = await accountModel.update(account.id, account, accountViewModel)
 
     return res.status('200').json(ret[0])
   } else if (data.account_number) {
-    let account = await db('Accounts').where({ number: data.account_number })
+    let account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
     if (!account) {
       res.status('200').json({ message: 'Không tìm thấy tài khoản của người dùng' })
     }
@@ -43,7 +42,7 @@ router.post('/DepositAccount', async (req, res) => {
       balance: account.balance + data.balance
     }
 
-    const ret = await accountModel.update(account.id, account, accountViewModel.split(' '))
+    const ret = await accountModel.update(account.id, account, accountViewModel)
 
     return res.status('200').json(ret[0])
   }

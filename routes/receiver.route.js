@@ -8,7 +8,7 @@ import { userViewModel } from '../view_models/user.viewModel.js'
 import receiverModel from '../models/receiver.model.js'
 import bankModel from '../models/bank.model.js'
 import { receiverViewModel } from '../view_models/receiver.viewModel.js'
-import db from '../utils/db.js'
+import { accountViewModel } from '../view_models/account.viewModel.js'
 
 const router = express.Router()
 
@@ -18,16 +18,16 @@ router.use(currentUserMdw)
 router.post('/', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
-  const account = await accountModel.fetch({ number: data.account_number }, 'user_id id')
+  const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
   if (!account) {
     return res.status('200').json({ message: 'Không tìm thấy tài khoản' })
   }
   if (data.reminiscent_name === undefined || data.reminiscent_name === null || data.reminiscent_name === '') {
-    const user = await userModel.fetch({ id: account.user_id }, userViewModel.split(' '))
+    const user = await userModel.findOne({ id: account.user_id }, userViewModel)
     if (!user) {
       return res.status('200').json({ message: 'Không tìm thấy người dùng' })
     }
-    data.reminiscent_name = user.user_name
+    data.reminiscent_name = user.username
   }
   data.user_id = currentUser.id
   const bank = await bankModel.fetch({ id: data.bank_id })
@@ -53,7 +53,7 @@ router.delete('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   const id = req.params.id
   console.log(id)
-  const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
+  const oldReceiver = await receiverModel.findOne({ id, user_id: currentUser.id }, receiverViewModel)
   if (!oldReceiver) {
     return res.status('200').json({ message: 'Không tìm thấy người nhận' })
   }
@@ -62,7 +62,7 @@ router.delete('/:id', async (req, res) => {
 })
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
-  const receivers = await db('Receivers').where({ user_id: currentUser.id })
+  const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)
   return res.status('200').json(receivers)
 })
 

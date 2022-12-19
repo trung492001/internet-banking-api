@@ -1,7 +1,7 @@
 {
     "type": "object",
     "properties": {
-      "user_name": {
+      "username": {
         "type": "string"
       },
       "password": {
@@ -21,7 +21,7 @@
       }
     },
     "required": [
-      "user_name",
+      "username",
       "password",
       "email",
       "phone",

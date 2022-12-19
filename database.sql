@@ -14,7 +14,7 @@ CREATE TABLE "Accounts" (
 
 CREATE TABLE "Users" (
 	"id" serial NOT NULL,
-	"user_name" VARCHAR(255) NOT NULL,
+	"username" VARCHAR(255) NOT NULL,
 	"password" VARCHAR(255) NOT NULL,
 	"email" VARCHAR(255) NOT NULL,
 	"phone" VARCHAR(255) NOT NULL,
@@ -95,12 +95,22 @@ CREATE TABLE "Banks" (
 
 
 
-CREATE TABLE "OTPs" (
+CREATE TABLE "TransactionOTPs" (
 	"id" serial NOT NULL,
 	"otp" VARCHAR(255) NOT NULL UNIQUE,
 	"expired_at" TIMESTAMP NOT NULL,
 	"transaction_id" integer NOT NULL,
-	CONSTRAINT "OTPs_pk" PRIMARY KEY ("id")
+	CONSTRAINT "TransactionOTPs_pk" PRIMARY KEY ("id")
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TABLE "ResetPasswordOTPs" (
+	"id" serial NOT NULL,
+	"otp" VARCHAR(255) NOT NULL UNIQUE,
+	"expired_at" TIMESTAMP NOT NULL,
+	"user_id" integer NOT NULL,
+	CONSTRAINT "ResetPasswordOTPs_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
 );
@@ -145,7 +155,9 @@ ALTER TABLE "DebtReminders" ADD CONSTRAINT "DebtReminders_fk0" FOREIGN KEY ("acc
 ALTER TABLE "DebtReminders" ADD CONSTRAINT "DebtReminders_fk1" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 
 
-ALTER TABLE "OTPs" ADD CONSTRAINT "OTPs_fk0" FOREIGN KEY ("transaction_id") REFERENCES "Transactions"("id") ON DELETE CASCADE;
+ALTER TABLE "TransactionOTPs" ADD CONSTRAINT "TransactionOTPs_fk0" FOREIGN KEY ("transaction_id") REFERENCES "Transactions"("id") ON DELETE CASCADE;
+
+ALTER TABLE "ResetPasswordOTPs" ADD CONSTRAINT "ResetPasswordOTPs_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 
 ALTER TABLE "RefreshTokens" ADD CONSTRAINT "RefreshTokens_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 

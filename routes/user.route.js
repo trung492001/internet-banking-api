@@ -9,6 +9,14 @@ import db from '../utils/db.js'
 import jwt from 'jsonwebtoken'
 import _CONF from '../config/index.js'
 import refreshTokenModel from '../models/refreshToken.model.js'
+import { userViewModel } from '../view_models/user.viewModel.js'
+import fs from 'fs'
+import nodemailer from 'nodemailer'
+import otpGenerator from 'otp-generator'
+import resetPasswordOTPModel from '../models/resetPasswordOTP.model.js'
+import { resetPasswordOTPViewModel } from '../view_models/resetPasswordOTP.viewModel.js'
+import transactionOTPModel from '../models/transactionOTP.model.js'
+import currentUserMdw from '../middlewares/currentUser.mdw.js'
 
 const router = express.Router()
 
@@ -18,7 +26,7 @@ const loginSchema = JSON.parse(await readFile(new URL('../schemas/login.json', i
 router.post('/', validate(userSchema), async (req, res) => {
   let data = req.body
 
-  const oldUser = await db('Users').where({ user_name: data.user_name }).first()
+  const oldUser = await userModel.findOne({ username: data.username }, userViewModel)
 
   if (oldUser) {
     return res.json('409').json({ message: 'User already exist' })
@@ -49,7 +57,7 @@ router.post('/', validate(userSchema), async (req, res) => {
 
 router.post('/Login', validate(loginSchema), async (req, res) => {
   const data = req.body
-  const ret = await db('Users').where('user_name', data.user_name)
+  const ret = await db('Users').where('username', data.username)
   if (ret.length === 0) {
     return res.status('200').json({ message: 'User not found' })
   } else {
@@ -91,7 +99,77 @@ router.post('/Login', validate(loginSchema), async (req, res) => {
       return res.status(401).json({ message: 'Invalid credential' })
     }
   }
-}
-)
+})
+
+router.post('/ResetPassword', async (req, res) => {
+  const data = req.body
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.smtp_email,
+      pass: process.env.smtp_email_password
+    }
+  })
+  const user = await userModel.findOne({ username: data.username }, userViewModel)
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
+  try {
+    const data = fs.readFileSync('./html_template/OTP.html')
+    let htmlString = data.toString()
+    htmlString = htmlString.replace('username', user.name)
+    htmlString = htmlString.replace('otp_code', otp)
+    const mainOptions = {
+      from: 'SWEN Bank',
+      to: user.email,
+      subject: 'OTP xác nhận giao dịch',
+      html: htmlString
+    }
+    transporter.sendMail(mainOptions, async (err, info) => {
+      if (err) {
+        console.log('err', err)
+      } else {
+        console.log('success')
+        const expiredTime = new Date()
+        expiredTime.setSeconds(new Date().getSeconds() + 60)
+        console.log(expiredTime)
+        const otpData = {
+          otp,
+          expired_at: expiredTime,
+          user_id: user.id
+        }
+        await resetPasswordOTPModel.add(otpData)
+      }
+    })
+  } catch (err) {
+    console.log('err', err)
+  }
+})
+
+router.post('/VerifyOTP', async (req, res) => {
+  const data = req.body
+  const resetPasswordOTP = await resetPasswordOTPModel.findOne({ otp: data.otp }, resetPasswordOTPViewModel)
+  const user = await userModel.findOne({ id: resetPasswordOTP.id })
+  if (new Date(resetPasswordOTP.expired_at).getTime() < new Date().getTime()) {
+    await transactionOTPModel.delete(resetPasswordOTP.id)
+    return res.status('200').json({ error_message: 'OTP hết hạn' })
+  }
+  const salt = await bcrypt.genSalt(10)
+  data.password = await bcrypt.hash(data.password, salt)
+  user.password = data.password
+  await userModel.update(user.id, user, userViewModel)
+  return res.status('200').json({ message: 'Đã thay đổi' })
+})
+
+router.use(currentUserMdw)
+router.patch('/', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  const data = req.body
+
+  const oldUser = await userModel.findOne({ id: currentUser.id }, userViewModel)
+
+  const salt = await bcrypt.genSalt(10)
+  oldUser.password = await bcrypt.hash(data.password, salt)
+  const ret = await userModel.update(currentUser.id, data, userViewModel)
+  res.status(201).json(ret[0])
+})
 
 export default router
