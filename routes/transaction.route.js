@@ -22,8 +22,8 @@ router.post('/:id/ResendOTP', async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-      user: process.env.smtp_email,
-      pass: process.env.smtp_email_password
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_EMAIL_PASSWORD
     }
   })
   const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
@@ -133,8 +133,8 @@ router.post('/', async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-      user: process.env.smtp_email,
-      pass: process.env.smtp_email_password
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_EMAIL_PASSWORD
     }
   })
   const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })

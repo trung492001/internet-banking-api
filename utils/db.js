@@ -1,15 +1,12 @@
 import knex from 'knex'
 import * as dotenv from 'dotenv'
+import pgConnectionString from 'pg-connection-string'
 dotenv.config()
 
+const config = pgConnectionString.parse(process.env.DATABASE_URL)
+
+config.ssl = { rejectUnauthorized: false }
 export default knex({
   client: 'pg',
-  connection: {
-    host: '127.0.0.1',
-    port: 5432,
-    user: 'postgres',
-    password: '123456',
-    database: 'internet-banking'
-  },
-  searchPath: ['knex', 'public']
+  connection: config
 })

@@ -73,13 +73,13 @@ router.post('/Login', validate(loginSchema), async (req, res) => {
         record.secret_key = refreshToken
 
         const expired = new Date(record.expired_at)
-        expired.setSeconds(expired.getSeconds() + process.env.expired_time)
+        expired.setSeconds(expired.getSeconds() + process.env.EXPIRED_TIME)
 
         record.expired_at = expired
         await refreshTokenModel.update(record.id, record)
       } else {
         const now = new Date()
-        now.setSeconds(now.getSeconds() + process.env.expired_time)
+        now.setSeconds(now.getSeconds() + process.env.EXPIRED_TIME)
 
         const data = {
           secret_key: refreshToken,
@@ -106,8 +106,8 @@ router.post('/ResetPassword', async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-      user: process.env.smtp_email,
-      pass: process.env.smtp_email_password
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_EMAIL_PASSWORD
     }
   })
   const user = await userModel.findOne({ username: data.username }, userViewModel)

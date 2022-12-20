@@ -27,7 +27,7 @@ router.post('/Refresh', async function (req, res) {
     }
 
     const expired = new Date(record.expired_time)
-    expired.setSeconds(expired.getSeconds() + process.env.expired_time)
+    expired.setSeconds(expired.getSeconds() + process.env.EXPIRED_TIME)
 
     record.expired_time = expired
     await refreshTokenModel.update(record.id, record)
