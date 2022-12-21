@@ -5,7 +5,7 @@ dotenv.config()
 
 const config = pgConnectionString.parse(process.env.DATABASE_URL)
 
-config.ssl = { rejectUnauthorized: false }
+// config.ssl = { rejectUnauthorized: false }
 export default knex({
   client: 'pg',
   connection: config
