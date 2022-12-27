@@ -1,1 +1,1 @@
-export const resetPasswordOTPViewModel = 'id otp created_at user_id'.split(' ')
+export const resetPasswordOTPViewModel = 'id otp expired_at user_id'.split(' ')
