@@ -32,6 +32,7 @@ router.post('/', validate(userSchema), async (req, res) => {
     return res.json('409').json({ message: 'User already exist' })
   }
 
+  data.role_id = data.role_id || 2
   const salt = await bcrypt.genSalt(10)
   data.password = await bcrypt.hash(data.password, salt)
   const ret = await userModel.add(data, 'id')
@@ -167,7 +168,8 @@ router.patch('/', async (req, res) => {
   const oldUser = await userModel.findOne({ id: currentUser.id }, userViewModel)
 
   const salt = await bcrypt.genSalt(10)
-  oldUser.password = await bcrypt.hash(data.password, salt)
+  // oldUser.password = await bcrypt.hash(data.password, salt)
+  delete data.token
   const ret = await userModel.update(currentUser.id, data, userViewModel)
   res.status(201).json(ret[0])
 })
