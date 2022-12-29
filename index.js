@@ -1,6 +1,7 @@
 import express from 'express'
 import morgan from 'morgan'
 import http from 'http'
+import cors from 'cors'
 
 import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
@@ -11,6 +12,7 @@ import transactionRoute from './routes/transaction.route.js'
 import debtReminderRoute from './routes/debtReminder.route.js'
 
 const app = express()
+app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
 
