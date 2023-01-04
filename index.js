@@ -3,6 +3,8 @@ import morgan from 'morgan'
 import http from 'http'
 import cors from 'cors'
 
+import asyncError from 'express-async-errors';
+
 import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
 import accountRoute from './routes/account.route.js'
@@ -27,6 +29,24 @@ app.use('/DebtReminders', debtReminderRoute)
 app.get('/', (req, res) => {
   res.send('Hello World')
 })
+
+app.get('/err', function (req, res) {
+  throw new Error('Error!');
+});
+
+app.use(function (req, res) {
+  res.status(404).json({
+    error: 'Endpoint not found!'
+  });
+});
+
+app.use(function (err, req, res, next) {
+  console.log(err.stack);
+  res.status(500).json({
+    status: 'Internal server error!',
+    message: err.stack
+  });
+});
 
 const PORT = process.env.PORT || 3030
 const server = http.createServer(app)

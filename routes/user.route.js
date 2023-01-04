@@ -165,10 +165,10 @@ router.patch('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
 
-  const oldUser = await userModel.findOne({ id: currentUser.id }, userViewModel)
-
-  const salt = await bcrypt.genSalt(10)
+  // const oldUser = await userModel.findOne({ id: currentUser.id }, userViewModel)
+  // const salt = await bcrypt.genSalt(10)
   // oldUser.password = await bcrypt.hash(data.password, salt)
+
   delete data.token
   const ret = await userModel.update(currentUser.id, data, userViewModel)
   res.status(201).json(ret[0])
