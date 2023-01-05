@@ -37,6 +37,7 @@ router.post('/', validate(addReceiverSchema), async (req, res) => {
   const ret = await receiverModel.add(data, receiverViewModel.split(' '))
   return res.status('201').json(ret[0])
 })
+
 router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
@@ -49,6 +50,7 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const ret = await receiverModel.update(id, data, receiverViewModel.split(' '))
   return res.status('200').json(ret[0])
 })
+
 router.delete('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   const id = req.params.id
@@ -60,6 +62,7 @@ router.delete('/:id', async (req, res) => {
   await receiverModel.delete(id)
   return res.status('204').json()
 })
+
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)

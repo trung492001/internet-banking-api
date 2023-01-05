@@ -49,12 +49,12 @@ router.delete('/:id', async (req, res) => {
 
   const date = new Date(ret[0].created_at)
   const dateStr =
-  ('00' + (date.getMonth() + 1)).slice(-2) + '/' +
-  ('00' + date.getDate()).slice(-2) + '/' +
-  date.getFullYear() + ' ' +
-  ('00' + (date.getHours() + 7)).slice(-2) + ':' +
-  ('00' + date.getMinutes()).slice(-2) + ':' +
-  ('00' + date.getSeconds()).slice(-2)
+    ('00' + (date.getMonth() + 1)).slice(-2) + '/' +
+    ('00' + date.getDate()).slice(-2) + '/' +
+    date.getFullYear() + ' ' +
+    ('00' + (date.getHours() + 7)).slice(-2) + ':' +
+    ('00' + date.getMinutes()).slice(-2) + ':' +
+    ('00' + date.getSeconds()).slice(-2)
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {

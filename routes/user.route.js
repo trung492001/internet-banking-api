@@ -23,39 +23,6 @@ const router = express.Router()
 const userSchema = JSON.parse(await readFile(new URL('../schemas/user.json', import.meta.url)))
 const loginSchema = JSON.parse(await readFile(new URL('../schemas/login.json', import.meta.url)))
 
-router.post('/', validate(userSchema), async (req, res) => {
-  let data = req.body
-
-  const oldUser = await userModel.findOne({ username: data.username }, userViewModel)
-
-  if (oldUser) {
-    return res.json('409').json({ message: 'User already exist' })
-  }
-
-  data.role_id = data.role_id || 2
-  const salt = await bcrypt.genSalt(10)
-  data.password = await bcrypt.hash(data.password, salt)
-  const ret = await userModel.add(data, 'id')
-  if (data.role_id === 2) {
-    const accountUUID = uuidv4()
-    const startWith = '32'
-    const generator = Math.floor(Math.random() * 999999)
-    const accountNumber = startWith + generator
-    await accountModel.add({
-      number: accountNumber,
-      uuid: accountUUID,
-      balance: 0,
-      is_payment_account: true,
-      user_id: ret[0].id
-    })
-  }
-  data = {
-    id: ret[0].id,
-    ...data
-  }
-  res.status(201).json(data)
-})
-
 router.post('/Login', validate(loginSchema), async (req, res) => {
   const data = req.body
   const ret = await db('Users').where('username', data.username)
@@ -172,6 +139,63 @@ router.patch('/', async (req, res) => {
   delete data.token
   const ret = await userModel.update(currentUser.id, data, userViewModel)
   res.status(201).json(ret[0])
+})
+
+router.post('/', validate(userSchema), async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 1 && currentUser.role_id !== 3) {
+    return res.status('403').json({ message: 'Không đủ quyền truy cập' })
+  }
+  let data = req.body
+  const oldUser = await userModel.findOne({ username: data.username }, userViewModel)
+
+  if (oldUser) {
+    return res.json('409').json({ message: 'User already exist' })
+  }
+
+  data.role_id = data.role_id || 2
+  const salt = await bcrypt.genSalt(10)
+  data.password = await bcrypt.hash(data.password, salt)
+  const ret = await userModel.add(data, 'id')
+
+  if (data.role_id === 2) {
+    const accountUUID = uuidv4()
+    const startWith = '32'
+    const generator = Math.floor(Math.random() * 999999)
+    const accountNumber = startWith + generator
+    await accountModel.add({
+      number: accountNumber,
+      uuid: accountUUID,
+      balance: 0,
+      is_payment_account: true,
+      user_id: ret[0].id
+    })
+  }
+  data = {
+    id: ret[0].id,
+    ...data
+  }
+  res.status(201).json(data)
+})
+
+router.get('/Employees', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 1) {
+    return res.status('403').json({ message: 'Không đủ quyền truy cập' })
+  }
+
+  const ret = await userModel.fetch({ role_id: 3 }, userViewModel)
+  res.status(200).json(ret)
+})
+
+router.delete('/Employees/:id', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 1) {
+    return res.status('403').json({ message: 'Không đủ quyền truy cập' })
+  }
+  const id = req.params.id
+  const ret = await userModel.delete(id)
+  res.status(200).json({ message: 'Deleted employee!' })
 })
 
 export default router

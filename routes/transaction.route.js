@@ -61,6 +61,7 @@ router.post('/:id/ResendOTP', async (req, res) => {
     return res.status('200').json({ message: 'Gửi mail thất bại' })
   }
 })
+
 router.post('/VerifyOTP', async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
@@ -109,6 +110,7 @@ router.post('/VerifyOTP', async (req, res) => {
   await transactionOTPModel.delete(otp.id)
   res.status('200').json({ message: 'Xác nhận thành công' })
 })
+
 router.post('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body

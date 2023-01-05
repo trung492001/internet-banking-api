@@ -4,6 +4,8 @@ import http from 'http'
 import cors from 'cors'
 
 import asyncError from 'express-async-errors';
+import swaggerUi from 'swagger-ui-express';
+import { readFile } from 'fs/promises';
 
 import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
@@ -29,6 +31,9 @@ app.use('/DebtReminders', debtReminderRoute)
 app.get('/', (req, res) => {
   res.send('Hello World')
 })
+
+const swaggerSpec = JSON.parse(await readFile(new URL('./schemas/swagger.json', import.meta.url)));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/err', function (req, res) {
   throw new Error('Error!');
