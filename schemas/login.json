@@ -1,16 +1,16 @@
 {
-    "type": "object",
-    "properties": {
-      "username": {
-        "type": "string"
-      },
-      "password": {
-        "type": "string"
-      }
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
     },
-    "required": [
-      "username",
-      "password"
-    ],
-    "additionalProperties": false
-  }
+    "password": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "username",
+    "password"
+  ],
+  "additionalProperties": false
+}

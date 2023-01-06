@@ -53,12 +53,12 @@ router.post('/:id/ResendOTP', async (req, res) => {
           transaction_id: id
         }
         await transactionOTPModel.add(otpData)
-        return res.status('200').json({ message: 'Gửi mail thành công' })
+        return res.status(200).json({ message: 'Gửi mail thành công' })
       }
     })
   } catch (err) {
     console.log('err', err)
-    return res.status('200').json({ message: 'Gửi mail thất bại' })
+    return res.status(200).json({ message: 'Gửi mail thất bại' })
   }
 })
 
@@ -67,20 +67,20 @@ router.post('/VerifyOTP', async (req, res) => {
   const data = req.body
   const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionViewModel)
   if (!otp) {
-    return res.status('200').json({ error_message: 'OTP không chính xác' })
+    return res.status(200).json({ error_message: 'OTP không chính xác' })
   }
   if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
     await transactionOTPModel.delete(otp.id)
-    return res.status('200').json({ error_message: 'OTP hết hạn' })
+    return res.status(200).json({ error_message: 'OTP hết hạn' })
   }
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ uuid: transactionData.source_account_uuid, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status('200').json({ error_message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status(200).json({ error_message: 'Không tìm thấy tài khoản thanh toán' })
   }
   const destinationAccount = await accountModel.fetch({ uuid: transactionData.destination_account_uuid }, accountViewModel)
   if (!destinationAccount) {
-    return res.status('200').json({ error_message: 'Không tìm thấy tài khoản người nhận' })
+    return res.status(200).json({ error_message: 'Không tìm thấy tài khoản người nhận' })
   }
   transactionData = {
     ...transactionData,
@@ -89,7 +89,7 @@ router.post('/VerifyOTP', async (req, res) => {
   await transactionModel.update(transactionData.id, transactionData)
 
   if (sourceAccount.balance < transactionData.amount) {
-    return res.status('200').json({ error_message: 'Không đủ số dư' })
+    return res.status(200).json({ error_message: 'Không đủ số dư' })
   }
   sourceAccount.balance -= transactionData.amount
   destinationAccount.balance += transactionData.amount
@@ -97,7 +97,7 @@ router.post('/VerifyOTP', async (req, res) => {
   if (transactionData.debt_reminder_id !== null) {
     let debtReminder = debtReminderModel.findOne({ id: transactionData.debt_reminder_id }, debtReminderViewModel)
     if (!debtReminder) {
-      return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+      return res.status(200).json({ error_message: 'Không tìm thấy nhắc nợ' })
     }
     debtReminder = {
       ...debtReminder,
@@ -108,7 +108,7 @@ router.post('/VerifyOTP', async (req, res) => {
   await accountModel.update(sourceAccount.id, sourceAccount)
   await accountModel.update(destinationAccount.id, destinationAccount)
   await transactionOTPModel.delete(otp.id)
-  res.status('200').json({ message: 'Xác nhận thành công' })
+  res.status(200).json({ message: 'Xác nhận thành công' })
 })
 
 router.post('/', async (req, res) => {
@@ -116,11 +116,11 @@ router.post('/', async (req, res) => {
   const data = req.body
   const sourceAccount = await accountModel.findOne({ uuid: data.source_account_uuid, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status(200).json({ message: 'Không tìm thấy tài khoản thanh toán' })
   }
   const destinationAccount = await accountModel.findOne({ uuid: data.destination_account_uuid }, accountViewModel)
   if (!destinationAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản người nhận' })
+    return res.status(200).json({ message: 'Không tìm thấy tài khoản người nhận' })
   }
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
@@ -171,7 +171,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.log('err', err)
   }
-  return res.status('200').json(transactionTransfer[0])
+  return res.status(200).json(transactionTransfer[0])
 })
 
 export default router

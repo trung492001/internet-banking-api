@@ -1,31 +1,31 @@
 {
-    "type": "object",
-    "properties": {
-      "username": {
-        "type": "string"
-      },
-      "password": {
-        "type": "string"
-      },
-      "email": {
-        "type": "string"
-      },
-      "phone": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "role_id": {
-        "type": "number"
-      }
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
     },
-    "required": [
-      "username",
-      "password",
-      "email",
-      "phone",
-      "name"
-    ],
-    "additionalProperties": false
-  }
+    "password": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "role_id": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "email",
+    "phone",
+    "name"
+  ],
+  "additionalProperties": false
+}

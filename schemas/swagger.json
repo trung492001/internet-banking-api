@@ -1,0 +1,908 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "SWEN Bank API",
+    "description": "API Documentation For SWEN Bank",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "host": "localhost:3030",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Users",
+      "description": "API for users in the system"
+    },
+    {
+      "name": "Roles",
+      "description": "API for roles in the system"
+    },
+    {
+      "name": "Accounts",
+      "description": "API for accounts in the system"
+    },
+    {
+      "name": "RefreshToken",
+      "description": "API for refreshToken in the system"
+    },
+    {
+      "name": "Receivers",
+      "description": "API for receivers in the system"
+    },
+    {
+      "name": "Transactions",
+      "description": "API for transactions in the system"
+    },
+    {
+      "name": "DebtReminders",
+      "description": "API for debtReminders in the system"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/Users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user account. Must be login as Admin or Employee role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the user information to create a new user account",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userSchema"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User account is created",
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "409": {
+            "description": "User already exist",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user account by id",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the user information to be updated",
+            "required": true,
+            "schema": {
+              "properties": {
+                "username": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Update actor successfully",
+            "schema": {
+              "properties": {
+                "username": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Users/Login": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Login to Internet Banking web application",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the information to login",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/loginToWeb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successfully",
+            "schema": {
+              "$ref": "#/definitions/loginResponse"
+            }
+          },
+          "401": {
+            "description": "Wrong username or password",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Users/ResetPassword": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset password of a user account",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the username of the account need to reset password",
+            "required": true,
+            "schema": {
+              "properties": {
+                "username": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "username"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful message, OTP code has been sent",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid username",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Users/VerifyOTP": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Verify OTP code to reset password of a user account",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the OTP code and new password of the account",
+            "required": true,
+            "schema": {
+              "properties": {
+                "otp": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "otp",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully reset password",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid OTP code",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Users/Employees": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get all employees. Only admin can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of employees",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "role_id": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Users/Employees/{empployeeID}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete an empployee. Only admin can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "empployeeID",
+            "in": "path",
+            "required": true,
+            "description": "ID of an employee",
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted employee",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Roles": {
+      "get": {
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Get all roles of the system",
+        "responses": {
+          "200": {
+            "description": "List of roles",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Create a new role",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "required": true,
+            "description": "Information of a role",
+            "schema": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created a new role",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Accounts/DepositAccount": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Deposit money to an account. Only Employee role can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the information to deposit money to an account",
+            "required": true,
+            "schema": {
+              "properties": {
+                "username": {
+                  "type": "string"
+                },
+                "account_number": {
+                  "type": "string"
+                },
+                "balance": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deposited money to an account",
+            "schema": {
+              "$ref": "#/definitions/account"
+            }
+          },
+          "204": {
+            "description": "Can't find the account to deposit money",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/RefreshToken/Refresh": {
+      "post": {
+        "tags": [
+          "RefreshToken"
+        ],
+        "summary": "Refresh the access token",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the Refresh Token to refresh the access token",
+            "required": true,
+            "schema": {
+              "properties": {
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully refreshed the access token",
+            "schema": {
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Receivers": {
+      "post": {
+        "tags": [
+          "Receivers"
+        ],
+        "summary": "Refresh the access token",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the Refresh Token to refresh the access token",
+            "required": true,
+            "schema": {
+              "properties": {
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully refreshed the access token",
+            "schema": {
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Receivers"
+        ],
+        "summary": "Refresh the access token",
+        "parameters": [
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the Refresh Token to refresh the access token",
+            "required": true,
+            "schema": {
+              "properties": {
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully refreshed the access token",
+            "schema": {
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "user": {
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "number"
+        }
+      }
+    },
+    "login": {
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "loginResponse": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "addReceiver": {
+      "properties": {
+        "account_number": {
+          "type": "string"
+        },
+        "reminiscent_name": {
+          "type": "string"
+        },
+        "bank_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "account": {
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "number": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "number"
+        },
+        "is_payment_account": {
+          "type": "boolean"
+        },
+        "user_id": {
+          "type": "number"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      }
+    },
+    "getAllFilmsSuccessResponse": {
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status of response"
+        },
+        "value": {
+          "$ref": "#/definitions/film",
+          "description": "All films"
+        }
+      }
+    },
+    "createNewFilm": {
+      "required": [
+        "title",
+        "description",
+        "release_year",
+        "language_id",
+        "rental_duration"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "release_year": {
+          "type": "number"
+        },
+        "language_id": {
+          "type": "number"
+        },
+        "original_language_id": {
+          "type": "number"
+        },
+        "rental_duration": {
+          "type": "number"
+        },
+        "rental_rate": {
+          "type": "number"
+        },
+        "replacement_cost": {
+          "type": "number"
+        },
+        "rating": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "special_features": {
+          "type": "string"
+        }
+      }
+    },
+    "userSchema": {
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "username",
+        "password",
+        "email",
+        "phone",
+        "name"
+      ]
+    },
+    "loginToWeb": {
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ]
+    },
+    "updateActor": {
+      "properties": {
+        "first_name": {
+          "type": "string"
+        },
+        "last_name": {
+          "type": "string"
+        }
+      }
+    },
+    "getAllActorsSuccessResponse": {
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status of response"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/actor"
+          },
+          "description": "The response value"
+        }
+      }
+    },
+    "createNewUserSuccess": {
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/user"
+        }
+      }
+    },
+    "errorResponse": {
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The error message"
+        }
+      }
+    },
+    "successResponse": {
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The success message"
+        }
+      }
+    }
+  }
+}

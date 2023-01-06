@@ -4,6 +4,7 @@ import db from '../utils/db.js'
 import jwt from 'jsonwebtoken'
 import _CONF from '../config/index.js'
 import refreshTokenModel from '../models/refreshToken.model.js'
+import { userViewModel } from '../view_models/user.viewModel.js'
 
 const router = express.Router()
 
@@ -17,24 +18,23 @@ router.post('/Refresh', async function (req, res) {
   if (refreshToken && listRefreshToken.length !== 0) {
     const record = listRefreshToken[0]
 
-    const user = await userModel.findByID(record.user_id)
+    const user = await userModel.findOne({id: record.user_id}, userViewModel)
 
-    const token = jwt.sign(user[0], _CONF.SECRET, { expiresIn: _CONF.tokenLife })
+    const token = jwt.sign(user, _CONF.SECRET, { expiresIn: _CONF.tokenLife })
 
     const response = {
       token,
       refreshToken
     }
 
-    const expired = new Date(record.expired_time)
+    const expired = new Date(record.expired_at)
     expired.setSeconds(expired.getSeconds() + process.env.EXPIRED_TIME)
-
-    record.expired_time = expired
+    record.expired_at = expired
     await refreshTokenModel.update(record.id, record)
 
     res.status(200).json(response)
   } else {
-    res.status(404).send('Invalid request')
+    res.status(400).send('Invalid Request')
   }
 })
 

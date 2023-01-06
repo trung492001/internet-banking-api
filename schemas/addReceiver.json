@@ -1,19 +1,19 @@
 {
-    "type": "object",
-    "properties": {
-      "account_number": {
-        "type": "string"
-      },
-      "reminiscent_name": {
-        "type": "string"
-      },
-      "bank_id": {
-        "type": "integer"
-      }
+  "type": "object",
+  "properties": {
+    "account_number": {
+      "type": "string"
     },
-    "required": [
-      "account_number",
-      "bank_id"
-    ],
-    "additionalProperties": false
-  }
+    "reminiscent_name": {
+      "type": "string"
+    },
+    "bank_id": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "account_number",
+    "bank_id"
+  ],
+  "additionalProperties": false
+}
