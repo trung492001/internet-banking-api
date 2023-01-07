@@ -80,7 +80,7 @@ router.post('/ResetPassword', async (req, res) => {
   })
   const user = await userModel.findOne({ username: data.username }, userViewModel)
   if (!user) {
-    return res.status(401).json({ error_message: 'Invalid username' })
+    return res.status(401).json({ message: 'Invalid username' })
   }
   const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
   try {
@@ -120,12 +120,12 @@ router.post('/VerifyOTP', async (req, res) => {
   const data = req.body
   const resetPasswordOTP = await resetPasswordOTPModel.findOne({ otp: data.otp }, resetPasswordOTPViewModel)
   if (!resetPasswordOTP) {
-    return res.status(401).json({ error_message: 'Invalid OTP' })
+    return res.status(401).json({ message: 'Invalid OTP' })
   }
   const user = await userModel.findOne({ id: resetPasswordOTP.user_id })
   if (new Date(resetPasswordOTP.expired_at).getTime() < new Date().getTime()) {
     await transactionOTPModel.delete(resetPasswordOTP.id)
-    return res.status(401).json({ error_message: 'OTP expired!' })
+    return res.status(401).json({ message: 'OTP expired!' })
   }
   const salt = await bcrypt.genSalt(10)
   data.password = await bcrypt.hash(data.password, salt)
@@ -150,7 +150,7 @@ router.patch('/', async (req, res) => {
 router.post('/', validate(userSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1 && currentUser.role_id !== 3) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
   }
   let data = req.body
   const oldUser = await userModel.findOne({ username: data.username }, userViewModel)
@@ -187,7 +187,7 @@ router.post('/', validate(userSchema), async (req, res) => {
 router.get('/Employees', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
   }
 
   const ret = await userModel.fetch({ role_id: 3 }, userViewModel)
@@ -197,7 +197,7 @@ router.get('/Employees', async (req, res) => {
 router.delete('/Employees/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
   }
   const id = req.params.id
   const ret = await userModel.delete(id)

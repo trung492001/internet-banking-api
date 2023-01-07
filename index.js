@@ -48,7 +48,6 @@ app.use(function (req, res) {
 app.use(function (err, req, res, next) {
   console.log(err.stack);
   res.status(500).json({
-    status: 'Internal server error!',
     message: err.stack
   });
 });

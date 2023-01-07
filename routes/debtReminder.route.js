@@ -12,6 +12,7 @@ import db from '../utils/db.js'
 import userModel from '../models/user.model.js'
 import { userViewModel } from '../view_models/user.viewModel.js'
 import { debtReminderViewModel } from '../view_models/debtReminder.viewModel.js'
+import { v4 as uuidv4 } from 'uuid'
 
 const router = express.Router()
 
@@ -19,6 +20,9 @@ router.use(currentUserMdw)
 router.post('/', async (req, res) => {
   let data = req.body
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   data = {
     ...data,
     user_id: currentUser.id,
@@ -26,28 +30,35 @@ router.post('/', async (req, res) => {
     created_at: new Date().toUTCString()
   }
   await debtReminderModel.add(data)
-  return res.status('200').json(data)
+  return res.status(200).json(data)
 })
 
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const account = await accountModel.findOne({ user_id: currentUser.id }, 'id')
-  const ret = await db('DebtReminders').select(debtReminderViewModel).where({ user_id: currentUser.id }).orWhere({ account_id: account[0].id })
-  return res.status('200').json(ret)
+  const ret = await db('DebtReminders').select(debtReminderViewModel).where({ user_id: currentUser.id }).orWhere({ account_id: account.id })
+  return res.status(200).json(ret)
 })
 
 router.delete('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const { id } = req.params
   const dataReq = req.body
   const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status(200).json({ message: 'Debt reminder not found' })
   }
   const account = await accountModel.findOne({ id: ret.account_id }, accountViewModel)
   const receiver = await userModel.findOne({ id: account.user_id }, userViewModel)
 
-  const date = new Date(ret[0].created_at)
+  const date = new Date(ret.created_at)
+  console.log(ret.created_at);
   const dateStr =
     ('00' + (date.getMonth() + 1)).slice(-2) + '/' +
     ('00' + date.getDate()).slice(-2) + '/' +
@@ -63,7 +74,7 @@ router.delete('/:id', async (req, res) => {
     }
   })
 
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency' })
+  const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
   try {
     const data = fs.readFileSync('./html_template/DebtReminder.html')
     let htmlString = data.toString()
@@ -89,37 +100,44 @@ router.delete('/:id', async (req, res) => {
     console.log('err', err)
   }
   await debtReminderModel.delete(id)
-  return res.status('200').json({ message: 'Xóa thành công' })
+  return res.status(201).json({ message: 'Debt reminder deleted' })
 })
 
 router.patch('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const { id } = req.params
   const data = req.body
   const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status(200).json({ message: 'Debt reminder not found' })
   }
   const result = await debtReminderModel.update(id, data, debtReminderViewModel)
-  return res.status('200').json(result)
+  return res.status(201).json(result)
 })
 
 router.post('/:id/Pay', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const { id } = req.params
   const data = req.body
-  const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
+  const account = await accountModel.findOne({ user_id: currentUser.id }, 'id')
+  const ret = await debtReminderModel.findOne({ id, account_id: account.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status(200).json({ message: 'Debt reminder not found' })
   }
 
   const sourceAccount = await accountModel.fetch({ uuid: data.source_account_uuid, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status(200).json({ message: 'Cannot find payment account' })
   }
   const destinationAccount = await accountModel.fetch({ id: ret.account_id }, accountViewModel)
   if (!destinationAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản người nhận' })
+    return res.status(200).json({ message: 'Cannot find receiver account' })
   }
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
@@ -127,6 +145,7 @@ router.post('/:id/Pay', async (req, res) => {
     created_at: new Date().toUTCString(),
     status_id: 1,
     code: transactionCode,
+    uuid: uuidv4(),
     debt_reminder_id: id
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')
@@ -162,7 +181,7 @@ router.post('/:id/Pay', async (req, res) => {
         const otpData = {
           otp,
           expired_at: expiredTime,
-          transaction_id: transactionTransfer.id
+          transaction_id: transactionTransfer[0].id
         }
         await otpModel.add(otpData)
       }
@@ -170,6 +189,7 @@ router.post('/:id/Pay', async (req, res) => {
   } catch (err) {
     console.log('err', err)
   }
+  return res.status(201).json(transactionTransfer[0])
 })
 
 export default router

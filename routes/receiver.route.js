@@ -17,24 +17,27 @@ const addReceiverSchema = JSON.parse(await readFile(new URL('../schemas/addRecei
 router.use(currentUserMdw)
 router.post('/', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const data = req.body
   const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
   if (!account) {
-    return res.status(204).json({ message: 'Không tìm thấy tài khoản' })
+    return res.status(200).json({ message: 'Cannot find the account' })
   }
   if (data.reminiscent_name === undefined || data.reminiscent_name === null || data.reminiscent_name === '') {
     const user = await userModel.findOne({ id: account.user_id }, userViewModel)
     if (!user) {
-      return res.status(204).json({ message: 'Không tìm thấy người dùng' })
+      return res.status(200).json({ message: 'Cannot find the user' })
     }
     data.reminiscent_name = user.username
   }
   data.user_id = currentUser.id
   const bank = await bankModel.fetch({ id: data.bank_id })
-  if (!bank) {
-    return res.status(204).json({ message: 'Không tìm thấy ngân hàng' })
+  if (!bank.length) {
+    return res.status(200).json({ message: 'Cannot find the bank' })
   }
-  const ret = await receiverModel.add(data, receiverViewModel.split(' '))
+  const ret = await receiverModel.add(data, receiverViewModel)
   return res.status(201).json(ret[0])
 })
 
@@ -43,12 +46,17 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const data = req.body
   const id = req.params.id
   console.log(id)
+  data.user_id = currentUser.id
+  const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
+  if (!account) {
+    return res.status(200).json({ message: 'Cannot find the account' })
+  }
   const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (!oldReceiver) {
-    return res.status(204).json({ message: 'Không tìm thấy người nhận' })
+    return res.status(200).json({ message: 'Cannot find the receiver' })
   }
-  const ret = await receiverModel.update(id, data, receiverViewModel.split(' '))
-  return res.status(200).json(ret[0])
+  const ret = await receiverModel.update(id, data, receiverViewModel)
+  return res.status(201).json(ret[0])
 })
 
 router.delete('/:id', async (req, res) => {
@@ -57,14 +65,17 @@ router.delete('/:id', async (req, res) => {
   console.log(id)
   const oldReceiver = await receiverModel.findOne({ id, user_id: currentUser.id }, receiverViewModel)
   if (!oldReceiver) {
-    return res.status(204).json({ message: 'Không tìm thấy người nhận' })
+    return res.status(200).json({ message: 'Cannot find the receiver' })
   }
   await receiverModel.delete(id)
-  return res.status(200).json()
+  return res.status(201).json({ message: 'Receiver deleted successfully'})
 })
 
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)
   return res.status(200).json(receivers)
 })
