@@ -17,6 +17,9 @@ const addReceiverSchema = JSON.parse(await readFile(new URL('../schemas/addRecei
 router.use(currentUserMdw)
 router.post('/', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const data = req.body
   const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
   if (!account) {
@@ -43,6 +46,11 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const data = req.body
   const id = req.params.id
   console.log(id)
+  data.user_id = currentUser.id
+  const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
+  if (!account) {
+    return res.status(200).json({ message: 'Cannot find the account' })
+  }
   const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (!oldReceiver) {
     return res.status(204).json({ status: 'fail', message: 'Not found receiver' })
@@ -65,6 +73,9 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)
   return res.status(200).json({ status: 'success', data: receivers })
 })

@@ -13,6 +13,10 @@
   "basePath": "/",
   "tags": [
     {
+      "name": "API For Other Banks",
+      "description": "API for other banks to connect to our system"
+    },
+    {
       "name": "Users",
       "description": "API for users in the system"
     },
@@ -102,7 +106,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Update user account by id",
+        "summary": "Update user account by id. Must be login as User role to access this API",
         "parameters": [
           {
             "name": "x-access-token",
@@ -206,7 +210,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Reset password of a user account",
+        "summary": "Reset password of an user account",
         "parameters": [
           {
             "name": "Request Body",
@@ -252,7 +256,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Verify OTP code to reset password of a user account",
+        "summary": "Verify OTP code to reset password of an user account",
         "parameters": [
           {
             "name": "Request Body",
@@ -317,7 +321,7 @@
             "schema": {
               "properties": {
                 "id": {
-                  "type": "number"
+                  "type": "integer"
                 },
                 "username": {
                   "type": "string"
@@ -332,7 +336,7 @@
                   "type": "string"
                 },
                 "role_id": {
-                  "type": "number"
+                  "type": "integer"
                 }
               }
             }
@@ -407,7 +411,7 @@
             "schema": {
               "properties": {
                 "id": {
-                  "type": "number"
+                  "type": "integer"
                 },
                 "name": {
                   "type": "string"
@@ -449,7 +453,7 @@
             "schema": {
               "properties": {
                 "id": {
-                  "type": "number"
+                  "type": "integer"
                 },
                 "name": {
                   "type": "string"
@@ -493,20 +497,25 @@
                   "type": "string"
                 },
                 "balance": {
-                  "type": "number"
+                  "type": "integer"
                 }
-              }
+              },
+              "required": [
+                "username",
+                "account_number",
+                "balance"
+              ]
             }
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "Successfully deposited money to an account",
             "schema": {
               "$ref": "#/definitions/account"
             }
           },
-          "204": {
+          "200": {
             "description": "Can't find the account to deposit money",
             "schema": {
               "$ref": "#/definitions/errorResponse"
@@ -544,7 +553,10 @@
                 "refreshToken": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "refreshToken"
+              ]
             }
           }
         ],
@@ -582,38 +594,65 @@
         "tags": [
           "Receivers"
         ],
-        "summary": "Refresh the access token",
+        "summary": "Add an account as a receiver in the receiver list. Only User role can access this API",
         "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
           {
             "name": "Request Body",
             "in": "body",
-            "description": "Provide the Refresh Token to refresh the access token",
+            "description": "Provide the account to add to the receiver list",
             "required": true,
             "schema": {
               "properties": {
-                "refreshToken": {
+                "reminiscent_name": {
                   "type": "string"
+                },
+                "account_number": {
+                  "type": "string"
+                },
+                "bank_id": {
+                  "type": "integer"
                 }
               }
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successfully refreshed the access token",
+          "201": {
+            "description": "Successfully create a new receiver",
             "schema": {
               "properties": {
-                "token": {
+                "id": {
+                  "type": "integer"
+                },
+                "reminiscent_name": {
                   "type": "string"
                 },
-                "refreshToken": {
+                "user_id": {
+                  "type": "integer"
+                },
+                "account_number": {
                   "type": "string"
+                },
+                "bank_id": {
+                  "type": "integer"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid Request",
+          "200": {
+            "description": "Cannot find the account",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
             "schema": {
               "$ref": "#/definitions/errorResponse"
             }
@@ -630,16 +669,264 @@
         "tags": [
           "Receivers"
         ],
-        "summary": "Refresh the access token",
+        "summary": "Get all receiver in the receiver list. Only User role can access this API",
         "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the receiver list",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "reminiscent_name": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "integer"
+                },
+                "account_number": {
+                  "type": "string"
+                },
+                "bank_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Receivers/{receiverID}": {
+      "patch": {
+        "tags": [
+          "Receivers"
+        ],
+        "summary": "Update a receiver in the receiver list. Only User role can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "receiverID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a receiver",
+            "type": "integer"
+          },
           {
             "name": "Request Body",
             "in": "body",
-            "description": "Provide the Refresh Token to refresh the access token",
+            "description": "Provide the receiver information to be updated",
             "required": true,
             "schema": {
               "properties": {
-                "refreshToken": {
+                "reminiscent_name": {
+                  "type": "string"
+                },
+                "account_number": {
+                  "type": "string"
+                },
+                "bank_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cannot find the receiver's account",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Update receiver successfully",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "reminiscent_name": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "integer"
+                },
+                "account_number": {
+                  "type": "string"
+                },
+                "bank_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Receivers"
+        ],
+        "summary": "Delete a receiver. Only User role can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "receiverID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a receiver",
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cannot find the receiver's account",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully delete the receiver",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Transactions": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Make a transaction. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the transaction information to proceed",
+            "required": true,
+            "schema": {
+              "properties": {
+                "source_account_uuid": {
+                  "type": "string"
+                },
+                "destination_account_uuid": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "fee_is_paid_by_receiver": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cannot find soure or receiver account",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Transaction transfer ID",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Transactions/VerifyOTP": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Verify OTP code to confirm the transaction. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the OTP code to confirm the transaction",
+            "required": true,
+            "schema": {
+              "properties": {
+                "otp": {
                   "type": "string"
                 }
               }
@@ -648,20 +935,360 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully refreshed the access token",
+            "description": "Invalid OTP or bank account not found",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Transaction has been confirmed",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Transactions/{Transaction_ID}/ResendOTP": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Re-send another OTP code to confirm the transaction. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Transaction_ID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a transaction",
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Failed to send OTP code",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "New OTP code is sent",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/DebtReminders": {
+      "post": {
+        "tags": [
+          "DebtReminders"
+        ],
+        "summary": "Create a new debt reminder. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the debt reminder information",
+            "required": true,
             "schema": {
               "properties": {
-                "token": {
-                  "type": "string"
+                "account_id": {
+                  "type": "integer"
                 },
-                "refreshToken": {
+                "amount": {
+                  "type": "integer"
+                },
+                "note": {
                   "type": "string"
                 }
               }
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debt reminder is created",
+            "schema": {
+              "$ref": "#/definitions/debtReminder"
+            }
           },
-          "400": {
-            "description": "Invalid Request",
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "DebtReminders"
+        ],
+        "summary": "Get all debt reminder of an account. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get debt reminder list",
+            "schema": {
+              "$ref": "#/definitions/debtReminder"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/DebtReminders/{DebtReminders_ID}": {
+      "delete": {
+        "tags": [
+          "DebtReminders"
+        ],
+        "summary": "Delete a debt reminder. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "DebtReminders_ID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a debt reminder",
+            "type": "integer"
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the debt reminder information",
+            "required": true,
+            "schema": {
+              "properties": {
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debt reminder not found",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Debt reminder is deleted",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "DebtReminders"
+        ],
+        "summary": "Update a debt reminder. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "DebtReminders_ID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a debt reminder",
+            "type": "integer"
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the debt reminder information",
+            "required": true,
+            "schema": {
+              "properties": {
+                "account_id": {
+                  "type": "integer"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "isPaid": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debt reminder not found",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Debt reminder is updated",
+            "schema": {
+              "$ref": "#/definitions/debtReminder"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/DebtReminders/{DebtReminders_ID}/Pay": {
+      "post": {
+        "tags": [
+          "DebtReminders"
+        ],
+        "summary": "Pay for a debt reminder. Must be login as User role to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "DebtReminders_ID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a debt reminder",
+            "type": "integer"
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the information to pay for the debt reminder",
+            "required": true,
+            "schema": {
+              "properties": {
+                "source_account_uuid": {
+                  "type": "string"
+                },
+                "destination_account_uuid": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "fee_is_paid_by_receiver": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debt reminder or bank account is not found",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Transaction transfer ID",
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
             "schema": {
               "$ref": "#/definitions/errorResponse"
             }
@@ -695,7 +1322,7 @@
           "type": "string"
         },
         "role_id": {
-          "type": "number"
+          "type": "integer"
         }
       }
     },
@@ -738,77 +1365,21 @@
     "account": {
       "properties": {
         "id": {
-          "type": "number"
+          "type": "integer"
         },
         "number": {
           "type": "string"
         },
         "balance": {
-          "type": "number"
+          "type": "integer"
         },
         "is_payment_account": {
           "type": "boolean"
         },
         "user_id": {
-          "type": "number"
+          "type": "integer"
         },
         "uuid": {
-          "type": "string"
-        }
-      }
-    },
-    "getAllFilmsSuccessResponse": {
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of response"
-        },
-        "value": {
-          "$ref": "#/definitions/film",
-          "description": "All films"
-        }
-      }
-    },
-    "createNewFilm": {
-      "required": [
-        "title",
-        "description",
-        "release_year",
-        "language_id",
-        "rental_duration"
-      ],
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "release_year": {
-          "type": "number"
-        },
-        "language_id": {
-          "type": "number"
-        },
-        "original_language_id": {
-          "type": "number"
-        },
-        "rental_duration": {
-          "type": "number"
-        },
-        "rental_rate": {
-          "type": "number"
-        },
-        "replacement_cost": {
-          "type": "number"
-        },
-        "rating": {
-          "type": "number"
-        },
-        "length": {
-          "type": "number"
-        },
-        "special_features": {
           "type": "string"
         }
       }
@@ -831,7 +1402,7 @@
           "type": "string"
         },
         "role_id": {
-          "type": "number"
+          "type": "integer"
         }
       },
       "required": [
@@ -841,6 +1412,31 @@
         "phone",
         "name"
       ]
+    },
+    "debtReminder": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "amount": {
+          "type": "integer"
+        },
+        "note": {
+          "type": "string"
+        },
+        "isPaid": {
+          "type": "boolean"
+        },
+        "user_id": {
+          "type": "integer"
+        },
+        "account_id": {
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "string"
+        }
+      }
     },
     "loginToWeb": {
       "properties": {
@@ -855,31 +1451,6 @@
         "username",
         "password"
       ]
-    },
-    "updateActor": {
-      "properties": {
-        "first_name": {
-          "type": "string"
-        },
-        "last_name": {
-          "type": "string"
-        }
-      }
-    },
-    "getAllActorsSuccessResponse": {
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of response"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/actor"
-          },
-          "description": "The response value"
-        }
-      }
     },
     "createNewUserSuccess": {
       "properties": {

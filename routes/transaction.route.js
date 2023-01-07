@@ -15,14 +15,18 @@ import bankModel from '../models/bank.model.js'
 import axios from 'axios'
 import NodeRSA from 'node-rsa'
 import md5 from 'md5'
+import { transactionOTPViewModel } from '../view_models/transactionOTP.viewModel.js'
 
 const router = express.Router()
 
 router.use(currentUserMdw)
 router.post('/:id/ResendOTP', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const { id } = req.params
-  const transaction = await transactionModel.findOne({ id }, transactionViewModel.split(' '))
+  const transaction = await transactionModel.findOne({ id }, transactionViewModel)
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -68,8 +72,11 @@ router.post('/:id/ResendOTP', async (req, res) => {
 
 router.post('/VerifyOTP', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const data = req.body
-  const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionViewModel)
+  const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionOTPViewModel)
   if (!otp) {
     return res.status(200).json({ status: 'fail', message: 'Not correct OTP' })
   }
@@ -135,7 +142,7 @@ router.post('/VerifyOTP', async (req, res) => {
   await accountModel.update(sourceAccount.id, sourceAccount)
 
   if (transactionData.debt_reminder_id !== null) {
-    let debtReminder = debtReminderModel.findOne({ id: transactionData.debt_reminder_id }, debtReminderViewModel)
+    let debtReminder = await debtReminderModel.findOne({ id: transactionData.debt_reminder_id }, debtReminderViewModel)
     if (!debtReminder) {
       return res.status(200).json({ status: 'fail', message: 'Not found debt reminder' })
     }
@@ -143,6 +150,7 @@ router.post('/VerifyOTP', async (req, res) => {
       ...debtReminder,
       isPaid: true
     }
+    console.log('debtReminder: ', debtReminder)
     await debtReminderModel.update(debtReminder.id, debtReminder)
   }
   await transactionOTPModel.delete(otp.id)
@@ -151,6 +159,9 @@ router.post('/VerifyOTP', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
   const data = req.body
   const sourceAccount = await accountModel.findOne({ number: data.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
