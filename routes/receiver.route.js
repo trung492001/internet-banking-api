@@ -20,22 +20,22 @@ router.post('/', validate(addReceiverSchema), async (req, res) => {
   const data = req.body
   const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
   if (!account) {
-    return res.status(204).json({ message: 'Không tìm thấy tài khoản' })
+    return res.status(204).json({ status: 'fail', message: 'Not found account' })
   }
   if (data.reminiscent_name === undefined || data.reminiscent_name === null || data.reminiscent_name === '') {
     const user = await userModel.findOne({ id: account.user_id }, userViewModel)
     if (!user) {
-      return res.status(204).json({ message: 'Không tìm thấy người dùng' })
+      return res.status(204).json({ status: 'fail', message: 'Not found user' })
     }
     data.reminiscent_name = user.username
   }
   data.user_id = currentUser.id
   const bank = await bankModel.fetch({ id: data.bank_id })
   if (!bank) {
-    return res.status(204).json({ message: 'Không tìm thấy ngân hàng' })
+    return res.status(204).json({ status: 'fail', message: 'Not found bank' })
   }
   const ret = await receiverModel.add(data, receiverViewModel.split(' '))
-  return res.status(201).json(ret[0])
+  return res.status(201).json({ status: 'success', data: ret[0] })
 })
 
 router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
@@ -45,10 +45,10 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   console.log(id)
   const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (!oldReceiver) {
-    return res.status(204).json({ message: 'Không tìm thấy người nhận' })
+    return res.status(204).json({ status: 'fail', message: 'Not found receiver' })
   }
   const ret = await receiverModel.update(id, data, receiverViewModel.split(' '))
-  return res.status(200).json(ret[0])
+  return res.status(200).json({ status: 'success', data: ret[0] })
 })
 
 router.delete('/:id', async (req, res) => {
@@ -57,16 +57,26 @@ router.delete('/:id', async (req, res) => {
   console.log(id)
   const oldReceiver = await receiverModel.findOne({ id, user_id: currentUser.id }, receiverViewModel)
   if (!oldReceiver) {
-    return res.status(204).json({ message: 'Không tìm thấy người nhận' })
+    return res.status(204).json({ status: 'fail', message: 'Not found receiver' })
   }
   await receiverModel.delete(id)
-  return res.status(200).json()
+  return res.status(200).json({ status: 'success', message: 'Delete successful' })
 })
 
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)
-  return res.status(200).json(receivers)
+  return res.status(200).json({ status: 'success', data: receivers })
+})
+
+router.get('/:id', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  const id = req.params.id
+  const receiver = await receiverModel.findOne({ user_id: currentUser.id, id }, receiverViewModel)
+  if (receiver) {
+    return res.status(200).json({ status: 'success', data: receiver })
+  }
+  return res.status(200).json({ status: 'fail', message: 'Not found receiver' })
 })
 
 export default router

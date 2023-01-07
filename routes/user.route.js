@@ -17,6 +17,7 @@ import resetPasswordOTPModel from '../models/resetPasswordOTP.model.js'
 import { resetPasswordOTPViewModel } from '../view_models/resetPasswordOTP.viewModel.js'
 import transactionOTPModel from '../models/transactionOTP.model.js'
 import currentUserMdw from '../middlewares/currentUser.mdw.js'
+import { accountViewModel } from '../view_models/account.viewModel.js'
 
 const router = express.Router()
 
@@ -27,7 +28,7 @@ router.post('/Login', validate(loginSchema), async (req, res) => {
   const data = req.body
   const ret = await db('Users').where('username', data.username)
   if (ret.length === 0) {
-    return res.status(401).json({ message: 'Invalid credential' })
+    return res.status(401).json({ status: 'fail', message: 'Invalid credential' })
   } else {
     const result = await bcrypt.compare(data.password, ret[0].password)
     if (result) {
@@ -62,9 +63,9 @@ router.post('/Login', validate(loginSchema), async (req, res) => {
         token,
         refreshToken
       }
-      return res.status(200).json(response)
+      return res.status(200).json({ status: 'success', data: response })
     } else {
-      return res.status(401).json({ message: 'Invalid credential' })
+      return res.status(401).json({ status: 'fail', message: 'Invalid credential' })
     }
   }
 })
@@ -80,7 +81,7 @@ router.post('/ResetPassword', async (req, res) => {
   })
   const user = await userModel.findOne({ username: data.username }, userViewModel)
   if (!user) {
-    return res.status(401).json({ error_message: 'Invalid username' })
+    return res.status(401).json({ status: 'fail', message: 'Invalid username' })
   }
   const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
   try {
@@ -108,7 +109,7 @@ router.post('/ResetPassword', async (req, res) => {
           user_id: user.id
         }
         await resetPasswordOTPModel.add(otpData)
-        res.status(200).json({ message: 'OTP code has been sent!' })
+        res.status(200).json({ status: 'success', message: 'OTP code has been sent!' })
       }
     })
   } catch (err) {
@@ -120,18 +121,18 @@ router.post('/VerifyOTP', async (req, res) => {
   const data = req.body
   const resetPasswordOTP = await resetPasswordOTPModel.findOne({ otp: data.otp }, resetPasswordOTPViewModel)
   if (!resetPasswordOTP) {
-    return res.status(401).json({ error_message: 'Invalid OTP' })
+    return res.status(401).json({ status: 'fail', message: 'Invalid OTP' })
   }
   const user = await userModel.findOne({ id: resetPasswordOTP.user_id })
   if (new Date(resetPasswordOTP.expired_at).getTime() < new Date().getTime()) {
     await transactionOTPModel.delete(resetPasswordOTP.id)
-    return res.status(401).json({ error_message: 'OTP expired!' })
+    return res.status(401).json({ status: 'fail', message: 'OTP expired!' })
   }
   const salt = await bcrypt.genSalt(10)
   data.password = await bcrypt.hash(data.password, salt)
   user.password = data.password
   await userModel.update(user.id, user, userViewModel)
-  return res.status(200).json({ message: 'Password changed!' })
+  return res.status(200).json({ status: 'success', message: 'Password changed!' })
 })
 
 router.use(currentUserMdw)
@@ -144,19 +145,19 @@ router.patch('/', async (req, res) => {
   // oldUser.password = await bcrypt.hash(data.password, salt)
 
   const ret = await userModel.update(currentUser.id, data, userViewModel)
-  res.status(201).json(ret[0])
+  res.status(201).json({ status: 'success', data: ret[0] })
 })
 
 router.post('/', validate(userSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1 && currentUser.role_id !== 3) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'Warning: You do not have permission to access the API!' })
   }
   let data = req.body
   const oldUser = await userModel.findOne({ username: data.username }, userViewModel)
 
   if (oldUser) {
-    return res.status(409).json({ message: 'User already exist' })
+    return res.status(409).json({ status: 'fail', message: 'User already exist' })
   }
 
   data.role_id = data.role_id || 2
@@ -181,27 +182,36 @@ router.post('/', validate(userSchema), async (req, res) => {
     id: ret[0].id,
     ...data
   }
-  res.status(201).json(data)
+  res.status(201).json({ status: 'success', data })
 })
 
 router.get('/Employees', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'Warning: You do not have permission to access the API!' })
   }
 
   const ret = await userModel.fetch({ role_id: 3 }, userViewModel)
-  res.status(200).json(ret)
+  res.status(200).json({ status: 'success', data: ret })
 })
 
 router.delete('/Employees/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 1) {
-    return res.status(403).json({ message: 'Warning: You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'Warning: You do not have permission to access the API!' })
   }
   const id = req.params.id
-  const ret = await userModel.delete(id)
-  res.status(200).json({ message: 'Deleted employee!' })
+  await userModel.delete(id)
+  res.status(200).json({ status: 'success', message: 'Deleted employee!' })
+})
+
+router.get('/Accounts', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  const account = await accountModel.findOne({ user_id: currentUser.id }, accountViewModel)
+  if (account) {
+    return res.status(200).json({ status: 'success', data: account })
+  }
+  return res.status(200).json({ status: 'fail', message: 'Not found account' })
 })
 
 export default router

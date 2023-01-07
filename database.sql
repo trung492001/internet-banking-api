@@ -4,7 +4,6 @@ CREATE TABLE "Accounts" (
 	"balance" FLOAT NOT NULL,
 	"is_payment_account" BOOLEAN NOT NULL,
 	"user_id" integer NOT NULL,
-	"uuid" VARCHAR(255) NOT NULL UNIQUE,
 	CONSTRAINT "Accounts_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
@@ -29,12 +28,16 @@ CREATE TABLE "Users" (
 
 CREATE TABLE "Transactions" (
 	"id" serial NOT NULL,
-	"uuid" VARCHAR(255) NOT NULL,
-	"source_account_uuid" VARCHAR(255) NOT NULL,
-	"destination_account_uuid" VARCHAR(255) NOT NULL,
+	"source_account_number" VARCHAR(255) NOT NULL,
+	"source_owner_name" VARCHAR(255) NOT NULL,
+	"source_bank_id" integer,
+	"destination_account_number" VARCHAR(255) NOT NULL,
+	"destination_owner_name" VARCHAR(255) NOT NULL,
+	"destination_bank_id" integer,
 	"created_at" TIMESTAMP NOT NULL,
 	"note" VARCHAR(255) NOT NULL,
 	"amount" integer NOT NULL,
+	"fee" integer NOT NULL,
 	"fee_is_paid_by_receiver" BOOLEAN NOT NULL,
 	"debt_reminder_id" integer,
 	"status_id" integer NOT NULL,
@@ -87,7 +90,8 @@ CREATE TABLE "DebtReminders" (
 CREATE TABLE "Banks" (
 	"id" serial NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
-	"host" VARCHAR(255),
+	"key" text,
+	"host" VARCHAR(255)
 	CONSTRAINT "Banks_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
@@ -145,7 +149,8 @@ ALTER TABLE "Users" ADD CONSTRAINT "Users_fk0" FOREIGN KEY ("role_id") REFERENCE
 
 ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk0" FOREIGN KEY ("status_id") REFERENCES "TransactionStatuses"("id") ON DELETE CASCADE;
 ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk1" FOREIGN KEY ("debt_reminder_id") REFERENCES "DebtReminders"("id") ON DELETE CASCADE;
-
+ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk2" FOREIGN KEY ("source_bank_id") REFERENCES "Banks"("id") ON DELETE CASCADE;
+ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk3" FOREIGN KEY ("destination_bank_id") REFERENCES "Banks"("id") ON DELETE CASCADE;
 
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk1" FOREIGN KEY ("bank_id") REFERENCES "Banks"("id") ON DELETE CASCADE;
@@ -166,7 +171,7 @@ INSERT INTO public."Roles"("name") VALUES('Admin');
 INSERT INTO public."Roles"("name") VALUES('Customer');
 INSERT INTO public."Roles"("name") VALUES('Employee');
 
-insert into public."Banks"("name", "host") VALUES('SNEW Bank', '');
+insert into public."Banks"("name", "key", "host") VALUES('SNEW', '', '');
 
 insert into public."TransactionStatuses"("name") values('Pending');
 insert into public."TransactionStatuses"("name") values('Fail');

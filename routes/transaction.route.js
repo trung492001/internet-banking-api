@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import express from 'express'
 import accountModel from '../models/account.model.js'
 import { accountViewModel } from '../view_models/account.viewModel.js'
@@ -8,9 +9,12 @@ import otpGenerator from 'otp-generator'
 import fs from 'fs'
 import transactionOTPModel from '../models/transactionOTP.model.js'
 import { transactionViewModel } from '../view_models/transaction.viewModel.js'
-import { v4 as uuidv4 } from 'uuid'
 import debtReminderModel from '../models/debtReminder.model.js'
 import { debtReminderViewModel } from '../view_models/debtReminder.viewModel.js'
+import bankModel from '../models/bank.model.js'
+import axios from 'axios'
+import NodeRSA from 'node-rsa'
+import md5 from 'md5'
 
 const router = express.Router()
 
@@ -53,12 +57,12 @@ router.post('/:id/ResendOTP', async (req, res) => {
           transaction_id: id
         }
         await transactionOTPModel.add(otpData)
-        return res.status(200).json({ message: 'Gửi mail thành công' })
+        return res.status(200).json({ status: 'success', message: 'Send mail successful' })
       }
     })
   } catch (err) {
     console.log('err', err)
-    return res.status(200).json({ message: 'Gửi mail thất bại' })
+    return res.status(200).json({ status: 'fail', message: 'Send mail failed' })
   }
 })
 
@@ -67,37 +71,73 @@ router.post('/VerifyOTP', async (req, res) => {
   const data = req.body
   const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionViewModel)
   if (!otp) {
-    return res.status(200).json({ error_message: 'OTP không chính xác' })
+    return res.status(200).json({ status: 'fail', message: 'Not correct OTP' })
   }
   if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
     await transactionOTPModel.delete(otp.id)
-    return res.status(200).json({ error_message: 'OTP hết hạn' })
+    return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
   }
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
-  const sourceAccount = await accountModel.findOne({ uuid: transactionData.source_account_uuid, user_id: currentUser.id }, accountViewModel)
+  const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status(200).json({ error_message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status(200).json({ status: 'fail', message: 'Not found source account' })
   }
-  const destinationAccount = await accountModel.fetch({ uuid: transactionData.destination_account_uuid }, accountViewModel)
-  if (!destinationAccount) {
-    return res.status(200).json({ error_message: 'Không tìm thấy tài khoản người nhận' })
-  }
-  transactionData = {
-    ...transactionData,
-    status_id: 2
-  }
-  await transactionModel.update(transactionData.id, transactionData)
-
   if (sourceAccount.balance < transactionData.amount) {
-    return res.status(200).json({ error_message: 'Không đủ số dư' })
+    return res.status(200).json({ status: 'fail', message: 'Invalid balance' })
+  }
+  switch (transactionData.destination_bank_id) {
+    case 1:
+      const destinationAccount = await accountModel.fetch({ uuid: transactionData.destination_account_number }, accountViewModel)
+      if (!destinationAccount) {
+        return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
+      }
+      transactionData = {
+        ...transactionData,
+        status_id: 2
+      }
+      await transactionModel.update(transactionData.id, transactionData)
+      destinationAccount.balance += transactionData.amount
+      await accountModel.update(destinationAccount.id, destinationAccount)
+      break
+    case 2:
+      const bank = await bankModel.findOne({ id: transactionData.destination_bank_id }, 'name host key'.split(' '))
+      const key = new NodeRSA(process.env.PRIVATE_KEY)
+      const transactionDataBuffer = {
+        fromAccountNumber: transactionData.source_account_number,
+        fromAccountOwnerName: transactionData.source_owner_name,
+        bankCode: bank.name,
+        toAccountNumber: transactionData.destination_account_number,
+        toAccountOwnerName: transactionData.destination_owner_name,
+        amount: transactionData.amount,
+        fee: transactionData.fee,
+        content: transactionData.note
+      }
+      const signature = key.sign(transactionDataBuffer, 'string')
+      const time = Date.now()
+      const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_FB88NCCA`)
+      const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
+        data: transactionDataBuffer,
+        signature,
+        publicKey: process.env.PUBLIC_KEY
+      }, {
+        params: {
+          hmac,
+          time,
+          bankCode: bank.name
+        }
+      })
+      console.log(ret)
+      break
+    default:
+      return res.json({ status: 'fail', message: 'Not found bank' })
   }
   sourceAccount.balance -= transactionData.amount
-  destinationAccount.balance += transactionData.amount
+  await accountModel.update(sourceAccount.id, sourceAccount)
 
   if (transactionData.debt_reminder_id !== null) {
     let debtReminder = debtReminderModel.findOne({ id: transactionData.debt_reminder_id }, debtReminderViewModel)
     if (!debtReminder) {
-      return res.status(200).json({ error_message: 'Không tìm thấy nhắc nợ' })
+      return res.status(200).json({ status: 'fail', message: 'Not found debt reminder' })
     }
     debtReminder = {
       ...debtReminder,
@@ -105,30 +145,29 @@ router.post('/VerifyOTP', async (req, res) => {
     }
     await debtReminderModel.update(debtReminder.id, debtReminder)
   }
-  await accountModel.update(sourceAccount.id, sourceAccount)
-  await accountModel.update(destinationAccount.id, destinationAccount)
   await transactionOTPModel.delete(otp.id)
-  res.status(200).json({ message: 'Xác nhận thành công' })
+  res.status(200).json({ status: 'success', message: 'Data changed' })
 })
 
 router.post('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const data = req.body
-  const sourceAccount = await accountModel.findOne({ uuid: data.source_account_uuid, user_id: currentUser.id }, accountViewModel)
+  const sourceAccount = await accountModel.findOne({ number: data.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status(200).json({ message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status(200).json({ status: 'fail', message: 'Not found source account' })
   }
-  const destinationAccount = await accountModel.findOne({ uuid: data.destination_account_uuid }, accountViewModel)
+  const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
   if (!destinationAccount) {
-    return res.status(200).json({ message: 'Không tìm thấy tài khoản người nhận' })
+    return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
   }
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
     ...data,
+    source_bank_id: 1,
     created_at: new Date().toUTCString(),
     status_id: 1,
     code: transactionCode,
-    uuid: uuidv4()
+    fee: 0
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')
 
@@ -171,7 +210,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.log('err', err)
   }
-  return res.status(200).json(transactionTransfer[0])
+  return res.status(200).json({ status: 'success', data: transactionTransfer[0] })
 })
 
 export default router

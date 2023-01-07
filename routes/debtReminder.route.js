@@ -26,14 +26,14 @@ router.post('/', async (req, res) => {
     created_at: new Date().toUTCString()
   }
   await debtReminderModel.add(data)
-  return res.status('200').json(data)
+  return res.status('200').json({ status: 'success', data })
 })
 
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   const account = await accountModel.findOne({ user_id: currentUser.id }, 'id')
   const ret = await db('DebtReminders').select(debtReminderViewModel).where({ user_id: currentUser.id }).orWhere({ account_id: account[0].id })
-  return res.status('200').json(ret)
+  return res.status('200').json({ status: 'success', data: ret })
 })
 
 router.delete('/:id', async (req, res) => {
@@ -42,7 +42,7 @@ router.delete('/:id', async (req, res) => {
   const dataReq = req.body
   const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status('200').json({ status: 'fail', message: 'Not found debt reminder' })
   }
   const account = await accountModel.findOne({ id: ret.account_id }, accountViewModel)
   const receiver = await userModel.findOne({ id: account.user_id }, userViewModel)
@@ -89,7 +89,7 @@ router.delete('/:id', async (req, res) => {
     console.log('err', err)
   }
   await debtReminderModel.delete(id)
-  return res.status('200').json({ message: 'Xóa thành công' })
+  return res.status('200').json({ status: 'success', message: 'Delete successful' })
 })
 
 router.patch('/:id', async (req, res) => {
@@ -98,10 +98,10 @@ router.patch('/:id', async (req, res) => {
   const data = req.body
   const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status('200').json({ status: 'success', message: 'Not found debt reminder' })
   }
   const result = await debtReminderModel.update(id, data, debtReminderViewModel)
-  return res.status('200').json(result)
+  return res.status('200').json({ status: 'success', data: result })
 })
 
 router.post('/:id/Pay', async (req, res) => {
@@ -110,16 +110,16 @@ router.post('/:id/Pay', async (req, res) => {
   const data = req.body
   const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
   if (!ret) {
-    return res.status('200').json({ error_message: 'Không tìm thấy nhắc nợ' })
+    return res.status('200').json({ status: 'fail', message: 'Not found debt reminder' })
   }
 
   const sourceAccount = await accountModel.fetch({ uuid: data.source_account_uuid, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản thanh toán' })
+    return res.status('200').json({ status: 'fail', message: 'Not found source account' })
   }
   const destinationAccount = await accountModel.fetch({ id: ret.account_id }, accountViewModel)
   if (!destinationAccount) {
-    return res.status('200').json({ message: 'Không tìm thấy tài khoản người nhận' })
+    return res.status('200').json({ status: 'fail', message: 'Not found destination account' })
   }
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {

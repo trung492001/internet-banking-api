@@ -18,7 +18,7 @@ router.post('/Refresh', async function (req, res) {
   if (refreshToken && listRefreshToken.length !== 0) {
     const record = listRefreshToken[0]
 
-    const user = await userModel.findOne({id: record.user_id}, userViewModel)
+    const user = await userModel.findOne({ id: record.user_id }, userViewModel)
 
     const token = jwt.sign(user, _CONF.SECRET, { expiresIn: _CONF.tokenLife })
 
@@ -32,9 +32,9 @@ router.post('/Refresh', async function (req, res) {
     record.expired_at = expired
     await refreshTokenModel.update(record.id, record)
 
-    res.status(200).json(response)
+    res.status(200).json({ status: 'success', data: response })
   } else {
-    res.status(400).send('Invalid Request')
+    res.status(400).send({ status: 'fail', message: 'Invalid Request' })
   }
 })
 
