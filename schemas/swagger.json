@@ -210,7 +210,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Reset password of a user account",
+        "summary": "Reset password of an user account",
         "parameters": [
           {
             "name": "Request Body",
@@ -256,7 +256,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Verify OTP code to reset password of a user account",
+        "summary": "Verify OTP code to reset password of an user account",
         "parameters": [
           {
             "name": "Request Body",
@@ -499,7 +499,12 @@
                 "balance": {
                   "type": "integer"
                 }
-              }
+              },
+              "required": [
+                "username",
+                "account_number",
+                "balance"
+              ]
             }
           }
         ],
@@ -548,7 +553,10 @@
                 "refreshToken": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "refreshToken"
+              ]
             }
           }
         ],

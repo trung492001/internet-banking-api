@@ -49,4 +49,13 @@ router.post('/DepositAccount', async (req, res) => {
   return res.status(200).json({ message: 'Cannot find account or username' })
 })
 
+router.get('/', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
+  const ret = await accountModel.findOne({ user_id: currentUser.id }, accountViewModel)
+  res.status(200).json(ret)
+})
+
 export default router
