@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
   const ret = await roleModel.fetch({}, 'id name'.split(' '))
-  res.status(200).json({ status: 'success', data: ret })
+  res.status(200).json(ret)
 })
 
 export default router

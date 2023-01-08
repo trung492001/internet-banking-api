@@ -79,7 +79,7 @@
           "201": {
             "description": "User account is created",
             "schema": {
-              "$ref": "#/definitions/user"
+              "$ref": "#/definitions/createNewUserSuccess"
             }
           },
           "403": {
@@ -106,7 +106,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "Update user account by id. Must be login as User role to access this API",
+        "summary": "Update user account information. Must be login as User role to access this API",
         "parameters": [
           {
             "name": "x-access-token",
@@ -139,20 +139,14 @@
         ],
         "responses": {
           "201": {
-            "description": "Update actor successfully",
+            "description": "Update user successfully",
             "schema": {
               "properties": {
-                "username": {
+                "status": {
                   "type": "string"
                 },
-                "email": {
-                  "type": "string"
-                },
-                "phone": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
+                "data": {
+                  "$ref": "#/definitions/updateResponseData"
                 }
               }
             }
@@ -187,7 +181,14 @@
           "200": {
             "description": "Login successfully",
             "schema": {
-              "$ref": "#/definitions/loginResponse"
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/loginResponseData"
+                }
+              }
             }
           },
           "401": {
@@ -233,7 +234,17 @@
           "200": {
             "description": "Successful message, OTP code has been sent",
             "schema": {
-              "$ref": "#/definitions/successResponse"
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              }
             }
           },
           "401": {
@@ -320,23 +331,14 @@
             "description": "List of employees",
             "schema": {
               "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "username": {
+                "status": {
                   "type": "string"
                 },
-                "email": {
-                  "type": "string"
-                },
-                "phone": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "role_id": {
-                  "type": "integer"
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/employeeResponseData"
+                  }
                 }
               }
             }
@@ -565,11 +567,11 @@
             "description": "Successfully refreshed the access token",
             "schema": {
               "properties": {
-                "token": {
+                "status": {
                   "type": "string"
                 },
-                "refreshToken": {
-                  "type": "string"
+                "data": {
+                  "$ref": "#/definitions/refreshAccessToken"
                 }
               }
             }
@@ -623,32 +625,23 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Successfully create a new receiver",
-            "schema": {
-              "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "reminiscent_name": {
-                  "type": "string"
-                },
-                "user_id": {
-                  "type": "integer"
-                },
-                "account_number": {
-                  "type": "string"
-                },
-                "bank_id": {
-                  "type": "integer"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Cannot find the account",
             "schema": {
               "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully create a new receiver",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/receiverSchema"
+                }
+              }
             }
           },
           "403": {
@@ -683,20 +676,14 @@
             "description": "Get the receiver list",
             "schema": {
               "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "reminiscent_name": {
+                "status": {
                   "type": "string"
                 },
-                "user_id": {
-                  "type": "integer"
-                },
-                "account_number": {
-                  "type": "string"
-                },
-                "bank_id": {
-                  "type": "integer"
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/receiverSchema"
+                  }
                 }
               }
             }
@@ -767,22 +754,19 @@
             "description": "Update receiver successfully",
             "schema": {
               "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "reminiscent_name": {
+                "status": {
                   "type": "string"
                 },
-                "user_id": {
-                  "type": "integer"
-                },
-                "account_number": {
-                  "type": "string"
-                },
-                "bank_id": {
-                  "type": "integer"
+                "data": {
+                  "$ref": "#/definitions/receiverSchema"
                 }
               }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
             }
           },
           "500": {
@@ -821,9 +805,69 @@
             }
           },
           "201": {
-            "description": "Successfully delete the receiver",
+            "description": "Successfully delete receiver",
             "schema": {
               "$ref": "#/definitions/successResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Receivers"
+        ],
+        "summary": "Get the receiver by ID. Only User role can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "receiverID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a receiver",
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the receiver",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/receiverSchema"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Cannot find the receiver"
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
             }
           },
           "500": {
@@ -1041,7 +1085,14 @@
           "200": {
             "description": "Debt reminder is created",
             "schema": {
-              "$ref": "#/definitions/debtReminder"
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/debtReminder"
+                }
+              }
             }
           },
           "403": {
@@ -1075,7 +1126,17 @@
           "200": {
             "description": "Get debt reminder list",
             "schema": {
-              "$ref": "#/definitions/debtReminder"
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/debtReminder"
+                  }
+                }
+              }
             }
           },
           "403": {
@@ -1206,7 +1267,17 @@
           "201": {
             "description": "Debt reminder is updated",
             "schema": {
-              "$ref": "#/definitions/debtReminder"
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/debtReminder"
+                  }
+                }
+              }
             }
           },
           "403": {
@@ -1251,21 +1322,18 @@
             "required": true,
             "schema": {
               "properties": {
-                "source_account_uuid": {
+                "source_account_number": {
                   "type": "string"
                 },
-                "destination_account_uuid": {
+                "destination_account_number": {
                   "type": "string"
-                },
-                "amount": {
-                  "type": "integer"
                 },
                 "note": {
                   "type": "string"
                 },
                 "fee_is_paid_by_receiver": {
                   "type": "boolean"
-                }
+                }        
               }
             }
           }
@@ -1306,6 +1374,9 @@
   "definitions": {
     "user": {
       "properties": {
+        "id": {
+          "type": "integer"
+        },
         "username": {
           "type": "string"
         },
@@ -1336,7 +1407,7 @@
         }
       }
     },
-    "loginResponse": {
+    "loginResponseData": {
       "properties": {
         "message": {
           "type": "string"
@@ -1346,6 +1417,9 @@
         },
         "refreshToken": {
           "type": "string"
+        },
+        "role_id": {
+          "type": "integer"
         }
       }
     },
@@ -1451,13 +1525,93 @@
     },
     "createNewUserSuccess": {
       "properties": {
-        "schema": {
+        "status": {
+          "type": "string"
+        },
+        "data": {
           "$ref": "#/definitions/user"
+        }
+      }
+    },
+    "updateResponseData": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "employeeResponseData": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "refreshAccessToken": {
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "receiverSchema": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "reminiscent_name": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "integer"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "bank_id": {
+          "type": "integer"
         }
       }
     },
     "errorResponse": {
       "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status message"
+        },
         "message": {
           "type": "string",
           "description": "The error message"
@@ -1466,6 +1620,10 @@
     },
     "successResponse": {
       "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status message"
+        },
         "message": {
           "type": "string",
           "description": "The success message"
