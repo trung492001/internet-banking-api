@@ -401,6 +401,52 @@
         }
       }
     },
+    "/Users/Accounts": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get current user's bank account information",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of employees",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/account"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
     "/Roles": {
       "get": {
         "tags": [
