@@ -1,1 +1,2 @@
 export const transactionViewModel = 'id fee source_account_number destination_account_number source_owner_name destination_owner_name source_bank_id destination_bank_id created_at note amount fee_is_paid_by_receiver status_id debt_reminder_id code'.split(' ')
+export const smallTransactionViewModel = 'fee source_account_number destination_account_number source_owner_name destination_owner_name source_bank_id destination_bank_id created_at note amount code'.split(' ')

@@ -4,7 +4,6 @@ import accountModel from '../models/account.model.js'
 import validate from '../middlewares/validate.mdw.js'
 import { readFile } from 'fs/promises'
 import bcrypt from 'bcrypt'
-import { v4 as uuidv4 } from 'uuid'
 import db from '../utils/db.js'
 import jwt from 'jsonwebtoken'
 import _CONF from '../config/index.js'
@@ -166,13 +165,11 @@ router.post('/', validate(userSchema), async (req, res) => {
   const ret = await userModel.add(data, 'id')
 
   if (data.role_id === 2) {
-    const accountUUID = uuidv4()
     const startWith = '32'
     const generator = Math.floor(Math.random() * 999999)
     const accountNumber = startWith + generator
     await accountModel.add({
       number: accountNumber,
-      uuid: accountUUID,
       balance: 0,
       is_payment_account: true,
       user_id: ret[0].id

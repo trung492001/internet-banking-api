@@ -13,6 +13,7 @@ import refreshTokenRoute from './routes/refreshToken.router.js'
 import receiverRoute from './routes/receiver.route.js'
 import transactionRoute from './routes/transaction.route.js'
 import debtReminderRoute from './routes/debtReminder.route.js'
+import externalRoute from './routes/external.route.js'
 
 const app = express()
 app.use(cors())
@@ -26,6 +27,7 @@ app.use('/RefreshToken', refreshTokenRoute)
 app.use('/Receivers', receiverRoute)
 app.use('/Transactions', transactionRoute)
 app.use('/DebtReminders', debtReminderRoute)
+app.use('/Api', externalRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World')
