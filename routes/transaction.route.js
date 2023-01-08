@@ -19,6 +19,26 @@ import { transactionOTPViewModel } from '../view_models/transactionOTP.viewModel
 
 const router = express.Router()
 
+const getDataConfirmationString = (data) => {
+  const keys = ['bankCode', 'transactionType', 'amount', 'fee', 'content', 'time', 'status']
+  const sortKeys = []
+  for (const key in data) {
+    if (keys.includes(key)) {
+      sortKeys.push(key)
+    }
+  }
+
+  sortKeys.sort()
+
+  const keyValues = []
+
+  sortKeys.forEach((key) => {
+    keyValues.push(`${key}=${data[key]}`)
+  })
+
+  return keyValues.join('&').toString()
+}
+
 router.use(currentUserMdw)
 router.post('/:id/ResendOTP', async (req, res) => {
   const currentUser = res.locals.currentUser
@@ -80,10 +100,10 @@ router.post('/VerifyOTP', async (req, res) => {
   if (!otp) {
     return res.status(200).json({ status: 'fail', message: 'Not correct OTP' })
   }
-  if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
-    await transactionOTPModel.delete(otp.id)
-    return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
-  }
+  // if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
+  //   await transactionOTPModel.delete(otp.id)
+  //   return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
+  // }
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
@@ -108,7 +128,10 @@ router.post('/VerifyOTP', async (req, res) => {
       break
     case 2:
       const bank = await bankModel.findOne({ id: transactionData.destination_bank_id }, 'name host key'.split(' '))
+      console.log(process.env.PRIVATE_KEY)
+      console.log(process.env.PUBLIC_KEY)
       const key = new NodeRSA(process.env.PRIVATE_KEY)
+      key.setOptions({ signingScheme: 'pkcs1-sha256' })
       const transactionDataBuffer = {
         fromAccountNumber: transactionData.source_account_number,
         fromAccountOwnerName: transactionData.source_owner_name,
@@ -119,21 +142,29 @@ router.post('/VerifyOTP', async (req, res) => {
         fee: transactionData.fee,
         content: transactionData.note
       }
-      const signature = key.sign(transactionDataBuffer, 'base')
+      const tempData = getDataConfirmationString(transactionDataBuffer)
+      const decodeData = md5(tempData)
+      const signature = key.sign(decodeData, 'base64')
       const time = Date.now()
       const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_FB88NCCA`)
-      const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
-        data: transactionDataBuffer,
-        signature,
-        publicKey: process.env.PUBLIC_KEY
-      }, {
-        params: {
-          hmac,
-          time,
-          bankCode: bank.name
-        }
-      })
-      console.log(ret)
+      try {
+        const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
+          data: transactionDataBuffer,
+          signature,
+          publicKey: process.env.PUBLIC_KEY
+        }, {
+          params: {
+            hmac,
+            time,
+            bankCode: bank.name
+          }
+        })
+        transactionData.status = 3
+        transactionData.signature = ret.data.payload.data.signature
+        await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
+      } catch (err) {
+        return res.status(400).json({ status: 'fail', message: err })
+      }
       break
     default:
       return res.json({ status: 'fail', message: 'Not found bank' })
@@ -153,7 +184,7 @@ router.post('/VerifyOTP', async (req, res) => {
     console.log('debtReminder: ', debtReminder)
     await debtReminderModel.update(debtReminder.id, debtReminder)
   }
-  await transactionOTPModel.delete(otp.id)
+  // await transactionOTPModel.delete(otp.id)
   res.status(200).json({ status: 'success', message: 'Data changed' })
 })
 
@@ -167,9 +198,11 @@ router.post('/', async (req, res) => {
   if (!sourceAccount) {
     return res.status(200).json({ status: 'fail', message: 'Not found source account' })
   }
-  const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
-  if (!destinationAccount) {
-    return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
+  if (data.destination_bank_id === 1) {
+    const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
+    if (!destinationAccount) {
+      return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
+    }
   }
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
