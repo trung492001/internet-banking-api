@@ -35,54 +35,58 @@ router.get('/GetInformationAccount', async (req, res) => {
 })
 
 router.post('/DepositAccount', async (req, res) => {
-  const query = req.query
-  const encode = md5(`bankCode=${query.bankCode}&time=${query.time}&key=${process.env.SECRET_KEY}`)
-  if (encode === query.hmac) {
-    const currentTime = Date.now()
-    if (currentTime - query.time <= process.env.EXPIRED_QUERY_TIME) {
-      const bank = await bankModel.findOne({ name: query.bankCode }, 'id')
-      if (bank) {
-        let data = req.body.data
-        let key = new NodeRSA(bank.key)
-        const signature = Buffer.from(req.body.signature, 'base64')
-        const transaction = Buffer.from(JSON.stringify(data))
-        const result = key.verify(transaction, signature)
-        if (result) {
-          let temp = true
-          if (data.fee === 0) temp = false
-          const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
+  try {
+    const query = req.query
+    const encode = md5(`bankCode=${query.bankCode}&time=${query.time}&key=${process.env.SECRET_KEY}`)
+    if (encode === query.hmac) {
+      const currentTime = Date.now()
+      if (currentTime - query.time <= process.env.EXPIRED_QUERY_TIME) {
+        const bank = await bankModel.findOne({ name: query.bankCode }, 'id')
+        if (bank) {
+          let data = req.body.data
+          let key = new NodeRSA(bank.key)
+          const signature = Buffer.from(req.body.signature, 'base64')
+          const transaction = Buffer.from(JSON.stringify(data))
+          const result = key.verify(transaction, signature)
+          if (result) {
+            let temp = true
+            if (data.fee === 0) temp = false
+            const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
 
-          data = {
-            ...data,
-            status_id: 2,
-            fee_is_paid_by_receiver: temp,
-            code: transactionCode,
-            created_at: new Date().toUTCString(),
-            signature: req.body.signature
-          }
-          let destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
-          if (destinationAccount) {
-            let balance = destinationAccount.balance + data.amount
-            if (data.fee_is_paid_by_receiver) balance -= data.fee
-            destinationAccount = {
-              ...destinationAccount,
-              balance
+            data = {
+              ...data,
+              status_id: 2,
+              fee_is_paid_by_receiver: temp,
+              code: transactionCode,
+              created_at: new Date().toUTCString(),
+              signature: req.body.signature
             }
-            await accountModel.update(destinationAccount.id, destinationAccount, accountViewModel)
-            const transactionRet = await transactionModel.add(data, smallTransactionViewModel)
-            key = new NodeRSA(process.env.PRIVATE_KEY)
-            const signature = key.sign(data, 'base64')
-            return res.status(200).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
+            let destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
+            if (destinationAccount) {
+              let balance = destinationAccount.balance + data.amount
+              if (data.fee_is_paid_by_receiver) balance -= data.fee
+              destinationAccount = {
+                ...destinationAccount,
+                balance
+              }
+              await accountModel.update(destinationAccount.id, destinationAccount, accountViewModel)
+              const transactionRet = await transactionModel.add(data, smallTransactionViewModel)
+              key = new NodeRSA(process.env.PRIVATE_KEY)
+              const signature = key.sign(data, 'base64')
+              return res.status(200).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
+            }
+            return res.json({ status: 'fail', message: 'Not found account' })
           }
-          return res.json({ status: 'fail', message: 'Not found account' })
+          return res.json({ status: 'fail', message: 'Invalid signature' })
         }
-        return res.json({ status: 'fail', message: 'Invalid signature' })
+        return res.json({ status: 'fail', message: 'Not found bank' })
       }
-      return res.json({ status: 'fail', message: 'Not found bank' })
+      return res.json({ status: 'fail', message: 'Time out' })
     }
-    return res.json({ status: 'fail', message: 'Time out' })
+    return res.json({ status: 'fail', message: 'Not Allow' })
+  } catch (err) {
+    return res.status(400).json({ status: 'fail', message: err })
   }
-  return res.json({ status: 'fail', message: 'Not Allow' })
 })
 
 router.post('/GenerateTestSign', async (req, res) => {

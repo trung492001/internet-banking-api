@@ -146,7 +146,7 @@ router.post('/VerifyOTP', async (req, res) => {
       const decodeData = md5(tempData)
       const signature = key.sign(decodeData, 'base64')
       const time = Date.now()
-      const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_FB88NCCA`)
+      const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
       try {
         const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
           data: transactionDataBuffer,
