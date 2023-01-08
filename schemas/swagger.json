@@ -1492,6 +1492,243 @@
           }
         }
       }
+    },
+    "/Api/GetInformationAccount": {
+      "get": {
+        "tags": [
+          "API For Other Banks"
+        ],
+        "summary": "Get information of an account with its account number",
+        "parameters": [
+          {
+            "name": "bankCode",
+            "in": "querry",
+            "description": "Provide the bank code",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "time",
+            "in": "querry",
+            "description": "Provide the time",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hmac",
+            "in": "querry",
+            "description": "Provide hmac",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountNumber",
+            "in": "querry",
+            "description": "Provide the account number",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully get the account information",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/externalGetAccount"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Error message, include these: Not found account, Not found bank, Time out, Not Allow",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Api/DepositAccount": {
+      "post": {
+        "tags": [
+          "API For Other Banks"
+        ],
+        "summary": "Deposit to an account",
+        "parameters": [
+          {
+            "name": "bankCode",
+            "in": "querry",
+            "description": "Provide the bank code",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "time",
+            "in": "querry",
+            "description": "Provide the time",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hmac",
+            "in": "querry",
+            "description": "Provide hmac",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the information to deposit to the account",
+            "required": true,
+            "schema": {
+              "properties": {
+                "fee": {
+                  "type": "integer"
+                },
+                "fee_is_paid_by_receiver": {
+                  "type": "boolean"
+                },
+                "destination_account_number": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Error message, include these: Not found account, Not found bank, Time out, Not Allow, Invalid signature",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully proceeded the deposit",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/externalGetAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Api/GenerateTestSign": {
+      "post": {
+        "tags": [
+          "API For Other Banks"
+        ],
+        "summary": "Generate Test Sign",
+        "parameters": [
+          {
+            "name": "bankCode",
+            "in": "querry",
+            "description": "Provide the bank code",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "time",
+            "in": "querry",
+            "description": "Provide the time",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hmac",
+            "in": "querry",
+            "description": "Provide hmac",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Request Body",
+            "in": "body",
+            "description": "Provide the information to deposit to the account",
+            "required": true,
+            "schema": {
+              "properties": {
+                "fee": {
+                  "type": "integer"
+                },
+                "fee_is_paid_by_receiver": {
+                  "type": "boolean"
+                },
+                "destination_account_number": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Error message, include these: Not found account, Not found bank, Time out, Not Allow, Invalid signature",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully proceeded the deposit",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/externalGetAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1741,6 +1978,19 @@
           "type": "integer"
         },
         "username": {
+          "type": "string"
+        }
+      }
+    },
+    "externalGetAccount": {
+      "properties": {
+        "number": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "bank": {
           "type": "string"
         }
       }

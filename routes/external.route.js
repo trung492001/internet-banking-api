@@ -23,15 +23,15 @@ router.get('/GetInformationAccount', async (req, res) => {
         const account = await accountModel.findOne({ number: query.accountNumber }, 'number user_id'.split(' '))
         if (account) {
           const user = await userModel.findOne({ id: account.user_id }, userViewModel)
-          return res.json({ status: 'success', data: { number: account.number, name: user.name, bank: bank.name } })
+          return res.status(200).json({ status: 'success', data: { number: account.number, name: user.name, bank: bank.name } })
         }
-        return res.json({ status: 'fail', message: 'Not found account' })
+        return res.status(202).json({ status: 'fail', message: 'Not found account' })
       }
-      return res.json({ status: 'fail', message: 'Not found bank' })
+      return res.status(202).json({ status: 'fail', message: 'Not found bank' })
     }
-    return res.json({ status: 'fail', message: 'Time out' })
+    return res.status(202).json({ status: 'fail', message: 'Time out' })
   }
-  return res.json({ status: 'fail', message: 'Not Allow' })
+  return res.status(202).json({ status: 'fail', message: 'Not Allow' })
 })
 
 router.post('/DepositAccount', async (req, res) => {
@@ -74,17 +74,17 @@ router.post('/DepositAccount', async (req, res) => {
               const transactionRet = await transactionModel.add(data, smallTransactionViewModel)
               key = new NodeRSA(process.env.PRIVATE_KEY)
               const signature = key.sign(data, 'base64')
-              return res.status(200).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
+              return res.status(201).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
             }
-            return res.json({ status: 'fail', message: 'Not found account' })
+            return res.status(200).json({ status: 'fail', message: 'Not found account' })
           }
-          return res.json({ status: 'fail', message: 'Invalid signature' })
+          return res.status(200).json({ status: 'fail', message: 'Invalid signature' })
         }
-        return res.json({ status: 'fail', message: 'Not found bank' })
+        return res.status(200).json({ status: 'fail', message: 'Not found bank' })
       }
-      return res.json({ status: 'fail', message: 'Time out' })
+      return res.status(200).json({ status: 'fail', message: 'Time out' })
     }
-    return res.json({ status: 'fail', message: 'Not Allow' })
+    return res.status(200).json({ status: 'fail', message: 'Not Allow' })
   } catch (err) {
     return res.status(400).json({ status: 'fail', message: err })
   }
@@ -93,7 +93,7 @@ router.post('/DepositAccount', async (req, res) => {
 router.post('/GenerateTestSign', async (req, res) => {
   const key = new NodeRSA(process.env.PRIVATE_KEY)
   const data = req.body
-  return res.json(key.sign(data, 'base64'))
+  return res.status(201).json(key.sign(data, 'base64'))
 })
 
 export default router
