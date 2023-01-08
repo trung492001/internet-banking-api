@@ -1000,10 +1000,10 @@
             "required": true,
             "schema": {
               "properties": {
-                "source_account_uuid": {
+                "source_account_number": {
                   "type": "string"
                 },
-                "destination_account_uuid": {
+                "destination_account_number": {
                   "type": "string"
                 },
                 "amount": {
@@ -1014,6 +1014,9 @@
                 },
                 "fee_is_paid_by_receiver": {
                   "type": "boolean"
+                },
+                "destination_bank_id": {
+                  "type": "integer"
                 }
               }
             }
@@ -1030,8 +1033,15 @@
             "description": "Transaction transfer ID",
             "schema": {
               "properties": {
-                "id": {
-                  "type": "integer"
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
@@ -1080,7 +1090,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Invalid OTP or bank account not found",
+            "description": "Include these error statuses: OTP_expired, OTP_invalid, no_source_account, no_destination_account, invalid_balance, no_debt_reminder",
             "schema": {
               "$ref": "#/definitions/errorResponse"
             }
@@ -1089,6 +1099,18 @@
             "description": "Transaction has been confirmed",
             "schema": {
               "$ref": "#/definitions/successResponse"
+            }
+          },
+          "400": {
+            "description": "Error with other-bank-transfer",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "401": {
+            "description": "Bank not found",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
             }
           },
           "500": {

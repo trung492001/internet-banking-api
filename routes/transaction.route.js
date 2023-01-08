@@ -16,6 +16,7 @@ import axios from 'axios'
 import NodeRSA from 'node-rsa'
 import md5 from 'md5'
 import { transactionOTPViewModel } from '../view_models/transactionOTP.viewModel.js'
+import userModel from '../models/user.model.js'
 
 const router = express.Router()
 
@@ -81,7 +82,7 @@ router.post('/:id/ResendOTP', async (req, res) => {
           transaction_id: id
         }
         await transactionOTPModel.add(otpData)
-        return res.status(200).json({ status: 'success', message: 'Send mail successful' })
+        return res.status(201).json({ status: 'success', message: 'OTP email is re-sent successfully' })
       }
     })
   } catch (err) {
@@ -97,8 +98,11 @@ router.post('/VerifyOTP', async (req, res) => {
   }
   const data = req.body
   const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionOTPViewModel)
+  if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
+    return res.status(200).json({ status: 'OTP_expired', message: 'OTP is expired' })
+  }
   if (!otp) {
-    return res.status(200).json({ status: 'fail', message: 'Not correct OTP' })
+    return res.status(200).json({ status: 'OTP_invalid', message: 'Not correct OTP' })
   }
   // if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
   //   await transactionOTPModel.delete(otp.id)
@@ -107,16 +111,16 @@ router.post('/VerifyOTP', async (req, res) => {
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status(200).json({ status: 'fail', message: 'Not found source account' })
+    return res.status(200).json({ status: 'no_source_account', message: 'Not found source account' })
   }
   if (sourceAccount.balance < transactionData.amount) {
-    return res.status(200).json({ status: 'fail', message: 'Invalid balance' })
+    return res.status(200).json({ status: 'invalid_balance', message: 'Invalid balance' })
   }
   switch (transactionData.destination_bank_id) {
     case 1:
-      const destinationAccount = await accountModel.fetch({ number: transactionData.destination_account_number }, accountViewModel)
+      const destinationAccount = (await accountModel.fetch({ number: transactionData.destination_account_number }, accountViewModel))[0]
       if (!destinationAccount) {
-        return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
+        return res.status(200).json({ status: 'no_destination_account', message: 'Not found destination account' })
       }
       transactionData = {
         ...transactionData,
@@ -171,7 +175,7 @@ router.post('/VerifyOTP', async (req, res) => {
       }
       break
     default:
-      return res.json({ status: 'fail', message: 'Not found bank' })
+      return res.status(401).json({ status: 'fail', message: 'Not found bank' })
   }
   sourceAccount.balance -= transactionData.amount
   await accountModel.update(sourceAccount.id, sourceAccount)
@@ -179,7 +183,7 @@ router.post('/VerifyOTP', async (req, res) => {
   if (transactionData.debt_reminder_id !== null) {
     let debtReminder = await debtReminderModel.findOne({ id: transactionData.debt_reminder_id }, debtReminderViewModel)
     if (!debtReminder) {
-      return res.status(200).json({ status: 'fail', message: 'Not found debt reminder' })
+      return res.status(200).json({ status: 'no_debt_reminder', message: 'Not found debt reminder' })
     }
     debtReminder = {
       ...debtReminder,
@@ -189,7 +193,7 @@ router.post('/VerifyOTP', async (req, res) => {
     await debtReminderModel.update(debtReminder.id, debtReminder)
   }
   // await transactionOTPModel.delete(otp.id)
-  res.status(200).json({ status: 'success', message: 'Data changed' })
+  res.status(201).json({ status: 'success', message: 'Transaction is proceeded' })
 })
 
 router.post('/', async (req, res) => {
@@ -200,14 +204,18 @@ router.post('/', async (req, res) => {
   const data = req.body
   const sourceAccount = await accountModel.findOne({ number: data.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
-    return res.status(200).json({ status: 'fail', message: 'Not found source account' })
+    return res.status(200).json({ status: 'no_source_account', message: 'Not found source account' })
   }
-  if (data.destination_bank_id === 1) {
-    const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
-    if (!destinationAccount) {
-      return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
-    }
+
+  // if (data.destination_bank_id === 1) {}
+
+  const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
+  if (!destinationAccount) {
+    return res.status(200).json({ status: 'no_destination_account', message: 'Not found destination account' })
   }
+  const destination_owner_name = (await userModel.findOne({ id: destinationAccount.user_id }, 'name')).name
+
+
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
     ...data,
@@ -215,7 +223,9 @@ router.post('/', async (req, res) => {
     created_at: new Date().toUTCString(),
     status_id: 1,
     code: transactionCode,
-    fee: 0
+    fee: 0,
+    source_owner_name: currentUser.name,
+    destination_owner_name
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')
 
@@ -258,7 +268,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.log('err', err)
   }
-  return res.status(200).json({ status: 'success', data: transactionTransfer[0] })
+  return res.status(201).json({ status: 'success', data: transactionTransfer[0] })
 })
 
 export default router
