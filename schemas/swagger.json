@@ -557,16 +557,23 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Successfully deposited money to an account",
-            "schema": {
-              "$ref": "#/definitions/account"
-            }
-          },
           "200": {
             "description": "Can't find the account to deposit money",
             "schema": {
               "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully deposited money to an account",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/account"
+                }
+              }
             }
           },
           "403": {
@@ -574,6 +581,54 @@
             "schema": {
               "$ref": "#/definitions/errorResponse"
             }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Accounts/{Account_Number}/Internal": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Get information of an internal bank account by its number",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Account_Number",
+            "in": "path",
+            "description": "Provide the account number to get information of the account",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the account information",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/definitions/findAccountByNumberSchema"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Can't find the account",
+            "schema": {}
           },
           "500": {
             "description": "Internal server error!",
@@ -1379,7 +1434,7 @@
                 },
                 "fee_is_paid_by_receiver": {
                   "type": "boolean"
-                }        
+                }
               }
             }
           }
@@ -1649,6 +1704,22 @@
         },
         "bank_id": {
           "type": "integer"
+        }
+      }
+    },
+    "findAccountByNumberSchema": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "number": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
         }
       }
     },
