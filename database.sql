@@ -42,6 +42,7 @@ CREATE TABLE "Transactions" (
 	"debt_reminder_id" integer,
 	"status_id" integer NOT NULL,
 	"code" VARCHAR(255) NOT NULL UNIQUE,
+	"signature" text,
 	CONSTRAINT "Transactions_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE

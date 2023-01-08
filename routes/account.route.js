@@ -51,7 +51,7 @@ router.post('/DepositAccount', async (req, res) => {
 
 router.get('/:accountNumber/Internal', async (req, res) => {
   const { accountNumber } = req.params
-  const account = await accountModel.findOne({ number: accountNumber }, 'id number uuid user_id'.split(' '))
+  const account = await accountModel.findOne({ number: accountNumber }, 'id number user_id'.split(' '))
   if (account) {
     const user = await userModel.findOne({ id: account.user_id }, 'name')
     return res.status(200).json({ status: 'success', data: { ...account, username: user.name } })

@@ -12,7 +12,6 @@ import db from '../utils/db.js'
 import userModel from '../models/user.model.js'
 import { userViewModel } from '../view_models/user.viewModel.js'
 import { debtReminderViewModel } from '../view_models/debtReminder.viewModel.js'
-import { v4 as uuidv4 } from 'uuid'
 
 const router = express.Router()
 
@@ -145,7 +144,6 @@ router.post('/:id/Pay', async (req, res) => {
     created_at: new Date().toUTCString(),
     status_id: 1,
     code: transactionCode,
-    uuid: uuidv4(),
     debt_reminder_id: id
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')

@@ -57,7 +57,8 @@ router.post('/DepositAccount', async (req, res) => {
             status_id: 2,
             fee_is_paid_by_receiver: temp,
             code: transactionCode,
-            created_at: new Date().toUTCString()
+            created_at: new Date().toUTCString(),
+            signature: req.body.signature
           }
           let destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
           if (destinationAccount) {
@@ -71,7 +72,7 @@ router.post('/DepositAccount', async (req, res) => {
             const transactionRet = await transactionModel.add(data, smallTransactionViewModel)
             key = new NodeRSA(process.env.PRIVATE_KEY)
             const signature = key.sign(data, 'base64')
-            return res.status(200).json({ status: 'success', data: transactionRet[0], signature })
+            return res.status(200).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
           }
           return res.json({ status: 'fail', message: 'Not found account' })
         }

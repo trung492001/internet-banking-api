@@ -94,7 +94,7 @@ router.post('/VerifyOTP', async (req, res) => {
   }
   switch (transactionData.destination_bank_id) {
     case 1:
-      const destinationAccount = await accountModel.fetch({ uuid: transactionData.destination_account_number }, accountViewModel)
+      const destinationAccount = await accountModel.fetch({ number: transactionData.destination_account_number }, accountViewModel)
       if (!destinationAccount) {
         return res.status(200).json({ status: 'fail', message: 'Not found destination account' })
       }
@@ -119,7 +119,7 @@ router.post('/VerifyOTP', async (req, res) => {
         fee: transactionData.fee,
         content: transactionData.note
       }
-      const signature = key.sign(transactionDataBuffer, 'string')
+      const signature = key.sign(transactionDataBuffer, 'base')
       const time = Date.now()
       const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_FB88NCCA`)
       const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
