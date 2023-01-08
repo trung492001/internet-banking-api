@@ -159,9 +159,13 @@ router.post('/VerifyOTP', async (req, res) => {
             bankCode: bank.name
           }
         })
-        transactionData.status = 3
-        transactionData.signature = ret.data.payload.data.signature
-        await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
+        if (ret.data.payload.data.status === 'success') {
+          transactionData.status = 3
+          transactionData.signature = ret.data.payload.data.signature
+          await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
+        } else {
+          return res.status(400).json({ status: 'fail' })
+        }
       } catch (err) {
         return res.status(400).json({ status: 'fail', message: err })
       }
