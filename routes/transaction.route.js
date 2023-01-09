@@ -104,10 +104,10 @@ router.post('/VerifyOTP', async (req, res) => {
   if (!otp) {
     return res.status(200).json({ status: 'OTP_invalid', message: 'Not correct OTP' })
   }
-  // if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
-  //   await transactionOTPModel.delete(otp.id)
-  //   return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
-  // }
+  if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
+    await transactionOTPModel.delete(otp.id)
+    return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
+  }
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
@@ -206,15 +206,28 @@ router.post('/', async (req, res) => {
   if (!sourceAccount) {
     return res.status(200).json({ status: 'no_source_account', message: 'Not found source account' })
   }
-
-  // if (data.destination_bank_id === 1) {}
-
-  const destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
+  let destinationAccount = null
+  if (data.destination_bank_id === 1) {
+    destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
+    const destinationOwnerName = await userModel.findOne({ id: destinationAccount.user_id }, 'name')
+    destinationAccount.accountOwnerName = destinationOwnerName.name
+  } else {
+    const time = Date.now()
+    const bank = await bankModel.findOne({ id: data.destination_bank_id }, 'host key'.split(' '))
+    const hmac = md5(`bankCode=SWEN&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
+    const ret = await axios.get(`${bank.host}/api/interbank/get-account/${data.destination_account_number}`, {
+      params: {
+        hmac,
+        time,
+        bankCode: 'SWEN'
+      }
+    })
+    console.log(ret)
+    if (ret.data.success) { destinationAccount = ret.data.payload }
+  }
   if (!destinationAccount) {
     return res.status(200).json({ status: 'no_destination_account', message: 'Not found destination account' })
   }
-  const destination_owner_name = (await userModel.findOne({ id: destinationAccount.user_id }, 'name')).name
-
 
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
@@ -225,7 +238,7 @@ router.post('/', async (req, res) => {
     code: transactionCode,
     fee: 0,
     source_owner_name: currentUser.name,
-    destination_owner_name
+    destination_owner_name: destinationAccount.accountOwnerName
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')
 

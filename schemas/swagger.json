@@ -1503,28 +1503,28 @@
           {
             "name": "bankCode",
             "in": "querry",
-            "description": "Provide the bank code",
+            "description": "Provide the bank of linked bank\nExample: SWEN",
             "required": true,
             "type": "integer"
           },
           {
             "name": "time",
             "in": "querry",
-            "description": "Provide the time",
+            "description": "Provide the time with timestamp format\nExample: 1673237427315",
             "required": true,
             "type": "string"
           },
           {
             "name": "hmac",
             "in": "querry",
-            "description": "Provide hmac",
+            "description": "Provide hmac to verify client, format: md5(data) | data:bankCode=${bankCode}&time=${time}&key=${SECRET_KEY}\nExample: b228769b678318d2a6a0db525967f691",
             "required": true,
             "type": "string"
           },
           {
             "name": "accountNumber",
             "in": "querry",
-            "description": "Provide the account number",
+            "description": "Provide the account number\n Example: 32xxxxxx",
             "required": true,
             "type": "string"
           }
@@ -1568,21 +1568,21 @@
           {
             "name": "bankCode",
             "in": "querry",
-            "description": "Provide the bank code",
+            "description": "Provide the bank of linked bank\nExample: SWEN",
             "required": true,
             "type": "integer"
           },
           {
             "name": "time",
             "in": "querry",
-            "description": "Provide the time",
+            "description": "Provide the time with timestamp format\nExample: 1673237427315",
             "required": true,
             "type": "string"
           },
           {
             "name": "hmac",
             "in": "querry",
-            "description": "Provide hmac",
+            "description": "Provide hmac to verify client, format: md5(data) | data:bankCode=${bankCode}&time=${time}&key=${SECRET_KEY}\nExample: b228769b678318d2a6a0db525967f691",
             "required": true,
             "type": "string"
           },
@@ -1593,17 +1593,42 @@
             "required": true,
             "schema": {
               "properties": {
-                "fee": {
-                  "type": "integer"
+                "data": {
+                  "type": "object",
+                  "properties":{
+                    "source_account_number":{
+                      "type": "string",
+                      "example": "90xxxxxxxxxxx"
+                    },
+                    "source_owner_name":{
+                      "type": "string",
+                      "example": "abc"
+                    },
+                    "destination_account_number":{
+                      "type": "string",
+                      "example": "32xxxxxx"
+                    },
+                    "destination_owner_name":{
+                      "type": "string",
+                      "example": "xyz" 
+                    },
+                    "amount":{
+                      "type": "integer",
+                      "example": "100000"
+                    },
+                    "fee":{
+                      "type":"integer",
+                      "example": "999"
+                    },
+                    "note":{
+                      "type":"string",
+                      "example": "chuyển tiền liên ngân hàng"
+                    }
+                  }
                 },
-                "fee_is_paid_by_receiver": {
-                  "type": "boolean"
-                },
-                "destination_account_number": {
-                  "type": "string"
-                },
-                "amount": {
-                  "type": "integer"
+                "signature":{
+                  "type": "string",
+                  "example": "Rb3jAuea+gzV6pzluM0K292RAZXV/vCN4KmaruhuSVpT8rvfvqK3lwdfWTJCaAEQvt2TgP5AvVl/ICvT454JNH4ohRhOVeB6tKFHpc71DTbREGY45AQVlBnzYqj2TKwGZMGxnXNDcfaGW1Wvbb6InwAfsomvh7HwQTTthJMDoZg="
                 }
               }
             }

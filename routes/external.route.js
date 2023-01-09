@@ -23,7 +23,7 @@ router.get('/GetInformationAccount', async (req, res) => {
         const account = await accountModel.findOne({ number: query.accountNumber }, 'number user_id'.split(' '))
         if (account) {
           const user = await userModel.findOne({ id: account.user_id }, userViewModel)
-          return res.status(200).json({ status: 'success', data: { number: account.number, name: user.name, bank: bank.name } })
+          return res.status(200).json({ status: 'success', data: { number: account.number, name: user.name, bank: 'SWEN' } })
         }
         return res.status(202).json({ status: 'fail', message: 'Not found account' })
       }
@@ -60,7 +60,9 @@ router.post('/DepositAccount', async (req, res) => {
               fee_is_paid_by_receiver: temp,
               code: transactionCode,
               created_at: new Date().toUTCString(),
-              signature: req.body.signature
+              signature: req.body.signature,
+              source_bank_id: bank.id,
+              destination_bank_id: 1
             }
             let destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
             if (destinationAccount) {
