@@ -43,6 +43,7 @@ CREATE TABLE "Transactions" (
 	"status_id" integer NOT NULL,
 	"code" VARCHAR(255) NOT NULL UNIQUE,
 	"signature" text,
+	"response_data" text,
 	CONSTRAINT "Transactions_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE

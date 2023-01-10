@@ -166,6 +166,7 @@ router.post('/VerifyOTP', async (req, res) => {
         if (ret.data.payload.data.status === 'success') {
           transactionData.status = 3
           transactionData.signature = ret.data.payload.data.signature
+          transactionData.response_data = JSON.stringify(ret.data.payload.data.data)
           await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
         } else {
           return res.status(400).json({ status: 'fail' })
