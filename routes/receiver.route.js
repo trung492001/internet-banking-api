@@ -18,7 +18,7 @@ router.use(currentUserMdw)
 router.post('/', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 2) {
-    return res.status(403).json({ status: "fail", message: 'You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const data = req.body
   const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
@@ -44,7 +44,7 @@ router.post('/', validate(addReceiverSchema), async (req, res) => {
 router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 2) {
-    return res.status(403).json({ status: "fail", message: 'You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const data = req.body
   const id = req.params.id
@@ -52,7 +52,7 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
   data.user_id = currentUser.id
   const account = await accountModel.findOne({ number: data.account_number }, accountViewModel)
   if (!account) {
-    return res.status(200).json({ status: "no_acccount", message: 'Cannot find the account' })
+    return res.status(200).json({ status: 'no_acccount', message: 'Cannot find the account' })
   }
   const oldReceiver = await receiverModel.fetch({ id, user_id: currentUser.id })
   if (oldReceiver.length === 0) {
@@ -65,7 +65,7 @@ router.patch('/:id', validate(addReceiverSchema), async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 2) {
-    return res.status(403).json({ status: "fail", message: 'You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const id = req.params.id
   console.log(id)
@@ -80,7 +80,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 2) {
-    return res.status(403).json({ status: "fail", message: 'You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const receivers = await receiverModel.fetch({ user_id: currentUser.id }, receiverViewModel)
   return res.status(200).json({ status: 'success', data: receivers })
@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
   if (currentUser.role_id !== 2) {
-    return res.status(403).json({ status: "fail", message: 'You do not have permission to access the API!' })
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const id = req.params.id
   const receiver = await receiverModel.findOne({ user_id: currentUser.id, id }, receiverViewModel)

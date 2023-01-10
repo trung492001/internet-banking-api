@@ -109,7 +109,7 @@ router.post('/ResetPassword', async (req, res) => {
           user_id: user.id
         }
         await resetPasswordOTPModel.add(otpData)
-        res.status(200).json({ status: 'success', message: 'OTP code has been sent!', email: user.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, "$1***@$2") })
+        res.status(200).json({ status: 'success', message: 'OTP code has been sent!', email: user.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, '$1***@$2') })
       }
     })
   } catch (err) {

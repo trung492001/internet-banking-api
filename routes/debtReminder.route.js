@@ -142,8 +142,8 @@ router.post('/:id/Pay', async (req, res) => {
   if (!destinationAccount) {
     return res.status(200).json({ status: 'no_destination_account', message: 'Not found destination account' })
   }
-  console.log('destinationAccount', destinationAccount);
-  const destination_owner_name = (await userModel.findOne({ id: destinationAccount.user_id }, 'name')).name
+  console.log('destinationAccount', destinationAccount)
+  const destinationOwnerName = await userModel.findOne({ id: destinationAccount.user_id }, 'name')
 
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
@@ -154,7 +154,7 @@ router.post('/:id/Pay', async (req, res) => {
     debt_reminder_id: id,
     fee: 0,
     source_owner_name: currentUser.name,
-    destination_owner_name,
+    destination_owner_name: destinationOwnerName,
     source_bank_id: 1,
     destination_bank_id: 1,
     amount: ret.amount

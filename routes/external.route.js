@@ -75,7 +75,7 @@ router.post('/DepositAccount', async (req, res) => {
               await accountModel.update(destinationAccount.id, destinationAccount, accountViewModel)
               const transactionRet = await transactionModel.add(data, smallTransactionViewModel)
               key = new NodeRSA(process.env.PRIVATE_KEY)
-              const signature = key.sign(data, 'base64')
+              const signature = key.sign(transactionRet[0], 'base64')
               return res.status(201).json({ status: 'success', data: transactionRet[0], signature, public_key: process.env.PUBLIC_KEY })
             }
             return res.status(200).json({ status: 'fail', message: 'Not found account' })
