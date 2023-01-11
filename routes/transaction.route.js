@@ -290,7 +290,7 @@ router.post('/', async (req, res) => {
 router.get('/:number', async (req, res) => {
   const accountNumber = req.params.number
   const result = await db("Transactions").where("source_account_number", accountNumber).orWhere("destination_account_number", accountNumber).orderBy("created_at", "desc")
-  console.log(result);
+  // console.log(result);
   res.status(200).json({ status: 'success', data: result })
 })
 

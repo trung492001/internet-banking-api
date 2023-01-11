@@ -1171,6 +1171,59 @@
         }
       }
     },
+    "/Transactions/{Account_Number}": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get the transactions information of an account. Must be login to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "Account_Number",
+            "in": "path",
+            "description": "Provide the account number",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the transactions list of an account",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Transactions"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Must be login to use this API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
     "/DebtReminders": {
       "post": {
         "tags": [
@@ -1595,38 +1648,38 @@
               "properties": {
                 "data": {
                   "type": "object",
-                  "properties":{
-                    "source_account_number":{
+                  "properties": {
+                    "source_account_number": {
                       "type": "string",
                       "example": "90xxxxxxxxxxx"
                     },
-                    "source_owner_name":{
+                    "source_owner_name": {
                       "type": "string",
                       "example": "abc"
                     },
-                    "destination_account_number":{
+                    "destination_account_number": {
                       "type": "string",
                       "example": "32xxxxxx"
                     },
-                    "destination_owner_name":{
+                    "destination_owner_name": {
                       "type": "string",
-                      "example": "xyz" 
+                      "example": "xyz"
                     },
-                    "amount":{
+                    "amount": {
                       "type": "integer",
                       "example": "100000"
                     },
-                    "fee":{
-                      "type":"integer",
+                    "fee": {
+                      "type": "integer",
                       "example": "999"
                     },
-                    "note":{
-                      "type":"string",
+                    "note": {
+                      "type": "string",
                       "example": "chuyển tiền liên ngân hàng"
                     }
                   }
                 },
-                "signature":{
+                "signature": {
                   "type": "string",
                   "example": "Rb3jAuea+gzV6pzluM0K292RAZXV/vCN4KmaruhuSVpT8rvfvqK3lwdfWTJCaAEQvt2TgP5AvVl/ICvT454JNH4ohRhOVeB6tKFHpc71DTbREGY45AQVlBnzYqj2TKwGZMGxnXNDcfaGW1Wvbb6InwAfsomvh7HwQTTthJMDoZg="
                 }
@@ -1930,6 +1983,61 @@
           "type": "string"
         },
         "bank": {
+          "type": "string"
+        }
+      }
+    },
+    "Transactions":{
+      "properties":{
+        "id":{
+          "type":"integer"
+        },
+        "source_account_number": {
+          "type": "string"
+        },
+        "source_owner_name": {
+          "type": "string"
+        },
+        "source_bank_id": {
+          "type": "integer"
+        },
+        "destination_account_number": {
+          "type": "string"
+        },
+        "destination_owner_name": {
+          "type": "string"
+        },
+        "destination_bank_id": {
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "integer"
+        },
+        "fee": {
+          "type": "integer"
+        },
+        "fee_is_paid_by_receiver": {
+          "type": "boolean"
+        },
+        "debt_reminder_id": {
+          "type": "integer"
+        },
+        "status_id": {
+          "type": "integer"
+        },
+        "code": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "response_data": {
           "type": "string"
         }
       }
