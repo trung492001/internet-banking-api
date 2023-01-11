@@ -83,7 +83,7 @@ router.post('/ResetPassword', async (req, res) => {
   if (!user) {
     return res.status(401).json({ status: 'fail', message: 'Invalid username' })
   }
-  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   try {
     const data = fs.readFileSync('./html_template/OTP.html')
     let htmlString = data.toString()

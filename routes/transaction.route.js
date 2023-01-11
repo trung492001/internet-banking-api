@@ -55,7 +55,7 @@ router.post('/:id/ResendOTP', async (req, res) => {
       pass: process.env.SMTP_EMAIL_PASSWORD
     }
   })
-  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   try {
     const data = fs.readFileSync('./html_template/OTP.html')
     let htmlString = data.toString()
@@ -250,7 +250,7 @@ router.post('/', async (req, res) => {
       pass: process.env.SMTP_EMAIL_PASSWORD
     }
   })
-  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false })
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   try {
     const data = fs.readFileSync('./html_template/OTP.html')
     let htmlString = data.toString()
@@ -280,6 +280,7 @@ router.post('/', async (req, res) => {
       }
     })
   } catch (err) {
+    res.status(200).json({ status: 'fail', message: 'Send mail failed' })
     console.log('err', err)
   }
   return res.status(201).json({ status: 'success', data: transactionTransfer[0] })
