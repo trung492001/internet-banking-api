@@ -17,6 +17,7 @@ import NodeRSA from 'node-rsa'
 import md5 from 'md5'
 import { transactionOTPViewModel } from '../view_models/transactionOTP.viewModel.js'
 import userModel from '../models/user.model.js'
+import db from '../utils/db.js'
 
 const router = express.Router()
 
@@ -284,6 +285,13 @@ router.post('/', async (req, res) => {
     console.log('err', err)
   }
   return res.status(201).json({ status: 'success', data: transactionTransfer[0] })
+})
+
+router.get('/:number', async (req, res) => {
+  const accountNumber = req.params.number
+  const result = await db("Transactions").where("source_account_number", accountNumber).orWhere("destination_account_number", accountNumber).orderBy("created_at", "desc")
+  console.log(result);
+  res.status(200).json({ status: 'success', data: result })
 })
 
 export default router
