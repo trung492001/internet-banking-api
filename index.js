@@ -5,7 +5,6 @@ import cors from 'cors'
 
 import swaggerUi from 'swagger-ui-express'
 import { readFile } from 'fs/promises'
-import express_async_errors from 'express-async-errors'
 
 import userRoute from './routes/user.route.js'
 import roleRoute from './routes/role.router.js'
