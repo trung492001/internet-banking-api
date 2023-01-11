@@ -1171,7 +1171,7 @@
         }
       }
     },
-    "/Transactions/{Account_Number}": {
+    "/Transactions/ByNumber/{Account_Number}": {
       "get": {
         "tags": [
           "Transactions"
@@ -1195,6 +1195,52 @@
         "responses": {
           "200": {
             "description": "Get the transactions list of an account",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Transactions"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Must be login to use this API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/Transactions/OtherBanks": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get all transactions information with other banks . Must be login as Admin to access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the transactions list",
             "schema": {
               "properties": {
                 "status": {

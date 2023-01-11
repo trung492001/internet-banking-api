@@ -287,9 +287,20 @@ router.post('/', async (req, res) => {
   return res.status(201).json({ status: 'success', data: transactionTransfer[0] })
 })
 
-router.get('/:number', async (req, res) => {
+router.get('/ByNumber/:number', async (req, res) => {
   const accountNumber = req.params.number
   const result = await db("Transactions").where("source_account_number", accountNumber).orWhere("destination_account_number", accountNumber).orderBy("created_at", "desc")
+  // console.log(result);
+  res.status(200).json({ status: 'success', data: result })
+})
+
+router.get('/OtherBanks', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 1) {
+    return res.status(403).json({ message: 'You do not have permission to access the API!' })
+  }
+
+  const result = await db("Transactions").where("source_bank_id", ">", 1).orWhere("destination_bank_id", ">", 1).orderBy("created_at", "desc")
   // console.log(result);
   res.status(200).json({ status: 'success', data: result })
 })
