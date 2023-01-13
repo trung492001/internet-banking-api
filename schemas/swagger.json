@@ -627,8 +627,7 @@
             }
           },
           "204": {
-            "description": "Can't find the account",
-            "schema": {}
+            "description": "Can't find the account"
           },
           "500": {
             "description": "Internal server error!",
