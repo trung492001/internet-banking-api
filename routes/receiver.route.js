@@ -99,4 +99,13 @@ router.get('/:id', async (req, res) => {
   return res.status(204).json({ status: 'fail', message: 'Not found receiver' })
 })
 
+router.get('/Number/:number', async (req, res) => {
+  const { number } = req.params
+  const receiver = await receiverModel.findOne({ account_number: number }, receiverViewModel)
+  if (receiver) {
+    return res.status(200).json({ status: 'success', data: receiver })
+  }
+  return res.status(204).json({ status: 'fail', message: 'Not found receiver' })
+})
+
 export default router
