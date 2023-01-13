@@ -109,6 +109,7 @@ router.post('/VerifyOTP', async (req, res) => {
     await transactionOTPModel.delete(otp.id)
     return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
   }
+  console.log(otp)
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
   if (!sourceAccount) {
@@ -195,7 +196,7 @@ router.post('/VerifyOTP', async (req, res) => {
     await debtReminderModel.update(debtReminder.id, debtReminder)
   }
   // await transactionOTPModel.delete(otp.id)
-  res.status(201).json({ status: 'success', message: 'Transaction is proceeded' })
+  res.status(201).json({ status: 'success', data: { id: transactionData.id } })
 })
 
 router.post('/', async (req, res) => {
@@ -289,9 +290,15 @@ router.post('/', async (req, res) => {
 
 router.get('/:number', async (req, res) => {
   const accountNumber = req.params.number
-  const result = await db("Transactions").where("source_account_number", accountNumber).orWhere("destination_account_number", accountNumber).orderBy("created_at", "desc")
+  const result = await db('Transactions').where('source_account_number', accountNumber).orWhere('destination_account_number', accountNumber).orderBy('created_at', 'desc')
   // console.log(result);
-  res.status(200).json({ status: 'success', data: result })
+  return res.status(200).json({ status: 'success', data: result })
+})
+
+router.get('/GetById/:id', async (req, res) => {
+  const targetId = req.params.id
+  const result = await transactionModel.findOne({ id: targetId }, transactionViewModel)
+  return res.status(200).json({ status: 'success', data: result })
 })
 
 export default router

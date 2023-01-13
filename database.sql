@@ -75,11 +75,13 @@ CREATE TABLE "Receivers" (
 
 
 CREATE TABLE "DebtReminders" (
-	"account_id" integer NOT NULL,
+	"source_account_number" VARCHAR(255) NOT NULL,
+	"source_owner_name" VARCHAR(255) NOT NULL,
+	"destination_account_number" VARCHAR(255) NOT NULL,
+	"destination_owner_name" VARCHAR(255) NOT NULL,
 	"id" serial NOT NULL,
 	"amount" integer NOT NULL,
 	"note" VARCHAR(255) NOT NULL,
-	"user_id" integer NOT NULL,
 	"isPaid" BOOLEAN NOT NULL,
 	"created_at" TIMESTAMP NOT NULL,
 	CONSTRAINT "DebtReminders_pk" PRIMARY KEY ("id")
@@ -93,7 +95,7 @@ CREATE TABLE "Banks" (
 	"id" serial NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
 	"key" text,
-	"host" VARCHAR(255)
+	"host" VARCHAR(255),
 	CONSTRAINT "Banks_pk" PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
@@ -156,11 +158,6 @@ ALTER TABLE "Transactions" ADD CONSTRAINT "Transactions_fk3" FOREIGN KEY ("desti
 
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk0" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
 ALTER TABLE "Receivers" ADD CONSTRAINT "Receivers_fk1" FOREIGN KEY ("bank_id") REFERENCES "Banks"("id") ON DELETE CASCADE;
-
-
-ALTER TABLE "DebtReminders" ADD CONSTRAINT "DebtReminders_fk0" FOREIGN KEY ("account_id") REFERENCES "Accounts"("id") ON DELETE CASCADE;
-ALTER TABLE "DebtReminders" ADD CONSTRAINT "DebtReminders_fk1" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE;
-
 
 ALTER TABLE "TransactionOTPs" ADD CONSTRAINT "TransactionOTPs_fk0" FOREIGN KEY ("transaction_id") REFERENCES "Transactions"("id") ON DELETE CASCADE;
 

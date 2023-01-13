@@ -54,7 +54,7 @@ router.get('/:accountNumber/Internal', async (req, res) => {
   const account = await accountModel.findOne({ number: accountNumber }, 'id number user_id'.split(' '))
   if (account) {
     const user = await userModel.findOne({ id: account.user_id }, 'name')
-    return res.status(200).json({ status: 'success', data: { ...account, username: user.name } })
+    return res.status(200).json({ status: 'success', data: { ...account, name: user.name } })
   }
   return res.status(204).json({ status: 'fail', message: 'Not found account' })
 })

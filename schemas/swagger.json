@@ -1258,7 +1258,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "Debt reminder is created",
             "schema": {
               "properties": {
@@ -1266,7 +1266,11 @@
                   "type": "string"
                 },
                 "data": {
-                  "$ref": "#/definitions/debtReminder"
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }

@@ -24,12 +24,11 @@ router.post('/', async (req, res) => {
   }
   data = {
     ...data,
-    user_id: currentUser.id,
     isPaid: false,
     created_at: new Date().toUTCString()
   }
-  await debtReminderModel.add(data)
-  return res.status(200).json({ status: 'success', data })
+  const ret = await debtReminderModel.add(data, 'id')
+  return res.status(201).json({ status: 'success', data: ret[0] })
 })
 
 router.get('/', async (req, res) => {
@@ -37,8 +36,22 @@ router.get('/', async (req, res) => {
   if (currentUser.role_id !== 2) {
     return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
-  const account = await accountModel.findOne({ user_id: currentUser.id }, 'id')
-  const ret = await db('DebtReminders').select(debtReminderViewModel).where({ user_id: currentUser.id }).orWhere({ account_id: account.id })
+  const account = await accountModel.findOne({ user_id: currentUser.id }, 'number')
+  console.log(currentUser)
+  const ret = await db('DebtReminders').select(debtReminderViewModel).where({ source_account_number: account.number }).orWhere({ destination_account_number: account.number })
+  console.log(ret)
+  return res.status(200).json({ status: 'success', data: ret })
+})
+
+router.get('/:id', async (req, res) => {
+  const { id } = req.params
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id !== 2) {
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
+  }
+  const account = await accountModel.findOne({ user_id: currentUser.id }, 'number')
+  const ret = await db('DebtReminders').select(debtReminderViewModel).where({ source_account_number: account.number, id }).orWhere({ destination_account_number: account.number, id }).first()
+  console.log(ret)
   return res.status(200).json({ status: 'success', data: ret })
 })
 
@@ -49,12 +62,13 @@ router.delete('/:id', async (req, res) => {
   }
   const { id } = req.params
   const dataReq = req.body
-  const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
+  const account = await accountModel.findOne({ user_id: currentUser.id }, 'number')
+  const ret = await debtReminderModel.findOne({ id, source_account_number: account.number }, debtReminderViewModel)
   if (!ret) {
     return res.status(200).json({ status: 'fail', message: 'Not found debt reminder' })
   }
-  const account = await accountModel.findOne({ id: ret.account_id }, accountViewModel)
-  const receiver = await userModel.findOne({ id: account.user_id }, userViewModel)
+  const receiverAccount = await accountModel.findOne({ number: ret.destination_account_number }, 'user_id')
+  const receiver = await userModel.findOne({ id: receiverAccount.user_id }, userViewModel)
 
   const date = new Date(ret.created_at)
   console.log(ret.created_at)
@@ -109,7 +123,8 @@ router.patch('/:id', async (req, res) => {
   }
   const { id } = req.params
   const data = req.body
-  const ret = await debtReminderModel.findOne({ id, user_id: currentUser.id }, debtReminderViewModel)
+  const account = await accountModel.findOne({ user_id: currentUser.id }, accountViewModel)
+  const ret = await debtReminderModel.findOne({ id, source_account_number: account.number }, debtReminderViewModel)
   if (!ret) {
     return res.status(200).json({ status: 'fail', message: 'Not found debt reminder' })
   }
@@ -124,13 +139,11 @@ router.post('/:id/Pay', async (req, res) => {
   }
   const { id } = req.params
   const data = req.body
-  const account = await accountModel.findOne({ user_id: currentUser.id }, 'id')
-  const ret = await debtReminderModel.findOne({ id, account_id: account.id }, debtReminderViewModel)
+  const ret = await debtReminderModel.findOne({ id }, debtReminderViewModel)
   if (!ret) {
     return res.status(200).json({ status: 'no_debt_reminder', message: 'Not found debt reminder' })
   }
-
-  const sourceAccount = await accountModel.fetch({ number: data.source_account_number, user_id: currentUser.id }, accountViewModel)
+  const sourceAccount = await accountModel.findOne({ number: ret.source_account_number }, accountViewModel)
   if (!sourceAccount) {
     return res.status(200).json({ status: 'no_source_account', message: 'Not found source account' })
   }
@@ -138,26 +151,28 @@ router.post('/:id/Pay', async (req, res) => {
     return res.status(200).json({ status: 'not_enough_balance', message: 'Not enough balance' })
   }
 
-  const destinationAccount = (await accountModel.fetch({ number: data.destination_account_number }, accountViewModel))[0]
+  const destinationAccount = await accountModel.findOne({ number: ret.destination_account_number }, accountViewModel)
   if (!destinationAccount) {
     return res.status(200).json({ status: 'no_destination_account', message: 'Not found destination account' })
   }
   console.log('destinationAccount', destinationAccount)
-  const destinationOwnerName = await userModel.findOne({ id: destinationAccount.user_id }, 'name')
 
   const transactionCode = 'SWEN' + otpGenerator.generate(15, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false })
   const transferData = {
-    ...data,
-    created_at: new Date().toUTCString(),
-    status_id: 1,
-    code: transactionCode,
-    debt_reminder_id: id,
-    fee: 0,
-    source_owner_name: currentUser.name,
-    destination_owner_name: destinationOwnerName,
+    source_account_number: ret.destination_account_number,
+    source_owner_name: ret.destination_owner_name,
+    destination_account_number: ret.source_account_number,
+    destination_owner_name: ret.source_owner_name,
     source_bank_id: 1,
     destination_bank_id: 1,
-    amount: ret.amount
+    created_at: new Date(),
+    note: data.note ?? '',
+    amount: ret.amount,
+    fee: 0,
+    fee_is_paid_by_receiver: data.fee_is_paid_by_receiver ?? true,
+    status_id: 1,
+    code: transactionCode,
+    debt_reminder_id: ret.id
   }
   const transactionTransfer = await transactionModel.add(transferData, 'id')
 
