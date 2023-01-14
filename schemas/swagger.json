@@ -447,6 +447,55 @@
         }
       }
     },
+    "/Users/Account/{User_ID}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete a user account. Only User and Employee role can access this API",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Provide the access token to access the API",
+            "required": true
+          },
+          {
+            "name": "User_ID",
+            "in": "path",
+            "required": true,
+            "description": "ID of a user account",
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cannot find the account",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "201": {
+            "description": "Successfully delete account",
+            "schema": {
+              "$ref": "#/definitions/successResponse"
+            }
+          },
+          "403": {
+            "description": "Do not have permission to access the API",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error!",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    },
     "/Roles": {
       "get": {
         "tags": [
@@ -2036,10 +2085,10 @@
         }
       }
     },
-    "Transactions":{
-      "properties":{
-        "id":{
-          "type":"integer"
+    "Transactions": {
+      "properties": {
+        "id": {
+          "type": "integer"
         },
         "source_account_number": {
           "type": "string"

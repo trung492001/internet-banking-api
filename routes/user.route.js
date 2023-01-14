@@ -215,4 +215,21 @@ router.get('/Accounts', async (req, res) => {
   return res.status(200).json({ status: 'fail', message: 'Not found account' })
 })
 
+router.delete('/Account/:id', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  if (currentUser.role_id === 1) {
+    return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
+  }
+  const id = req.params.id
+  const account = await accountModel.findOne({ user_id: id }, accountViewModel)
+
+  if (!account) {
+    return res.status(200).json({ status: 'fail', message: 'Not found account' })
+  }
+  await userModel.delete(id)
+  await accountModel.delete(account.id)
+
+  res.status(201).json({ status: 'success', message: 'Deleted account!' })
+})
+
 export default router
