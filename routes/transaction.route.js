@@ -314,4 +314,13 @@ router.get('/OtherBanks', async (req, res) => {
   res.status(200).json({ status: 'success', data: result })
 })
 
+router.get('/', async (req, res) => {
+  const currentUser = res.locals.currentUser
+  const query = req.query
+  const date = new Date(Date.now() - query.time * 24 * 60 * 60 * 1000)
+  const account = await accountModel.findOne({ user_id: currentUser.id }, 'number')
+  const ret = await db('Transactions').select(transactionViewModel).where('created_at', '>', date).andWhere('source_account_number', '=', account.number).orWhere('destination_account_number', '=', account.number)
+  res.status(200).json({ status: 'success', data: ret })
+})
+
 export default router

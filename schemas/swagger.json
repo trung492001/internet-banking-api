@@ -1653,28 +1653,28 @@
         "parameters": [
           {
             "name": "bankCode",
-            "in": "querry",
+            "in": "query",
             "description": "Provide the bank of linked bank\nExample: SWEN",
             "required": true,
-            "type": "integer"
+            "type": "string"
           },
           {
             "name": "time",
-            "in": "querry",
+            "in": "query",
             "description": "Provide the time with timestamp format\nExample: 1673237427315",
             "required": true,
             "type": "string"
           },
           {
             "name": "hmac",
-            "in": "querry",
+            "in": "query",
             "description": "Provide hmac to verify client, format: md5(data) | data:bankCode=${bankCode}&time=${time}&key=${SECRET_KEY}\nExample: b228769b678318d2a6a0db525967f691",
             "required": true,
             "type": "string"
           },
           {
             "name": "accountNumber",
-            "in": "querry",
+            "in": "query",
             "description": "Provide the account number\n Example: 32xxxxxx",
             "required": true,
             "type": "string"
