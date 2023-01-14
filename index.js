@@ -17,7 +17,9 @@ import externalRoute from './routes/external.route.js'
 import bankRoute from './routes/bank.route.js'
 
 const app = express()
-app.use(cors())
+app.use(cors({
+  origin: ['http://143.198.218.103:3030']
+}))
 app.use(express.json())
 app.use(morgan('dev'))
 
