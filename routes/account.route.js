@@ -17,6 +17,7 @@ router.post('/DepositAccount', async (req, res) => {
     return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
   const data = req.body
+  data.balance = parseInt(data.balance)
   if (data.username) {
     const user = await userModel.findOne({ username: data.username }, userViewModel)
     if (!user) {
