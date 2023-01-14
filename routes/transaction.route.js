@@ -99,16 +99,16 @@ router.post('/VerifyOTP', async (req, res) => {
   }
   const data = req.body
   const otp = await transactionOTPModel.findOne({ otp: data.otp }, transactionOTPViewModel)
-  if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
-    return res.status(200).json({ status: 'OTP_expired', message: 'OTP is expired' })
-  }
+  // if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
+  //   return res.status(200).json({ status: 'OTP_expired', message: 'OTP is expired' })
+  // }
   if (!otp) {
     return res.status(200).json({ status: 'OTP_invalid', message: 'Not correct OTP' })
   }
-  if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
-    await transactionOTPModel.delete(otp.id)
-    return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
-  }
+  // if (new Date(otp.expired_at).getTime() < new Date().getTime()) {
+  //   await transactionOTPModel.delete(otp.id)
+  //   return res.status(200).json({ status: 'fail', message: 'Time out OTP' })
+  // }
   console.log(otp)
   let transactionData = await transactionModel.findOne({ id: otp.transaction_id }, transactionViewModel)
   const sourceAccount = await accountModel.findOne({ number: transactionData.source_account_number, user_id: currentUser.id }, accountViewModel)
@@ -141,7 +141,7 @@ router.post('/VerifyOTP', async (req, res) => {
       const transactionDataBuffer = {
         fromAccountNumber: transactionData.source_account_number,
         fromAccountOwnerName: transactionData.source_owner_name,
-        bankCode: bank.name,
+        bankCode: 'SWEN',
         toAccountNumber: transactionData.destination_account_number,
         toAccountOwnerName: transactionData.destination_owner_name,
         amount: transactionData.amount,
@@ -152,7 +152,7 @@ router.post('/VerifyOTP', async (req, res) => {
       const decodeData = md5(tempData)
       const signature = key.sign(decodeData, 'base64')
       const time = Date.now()
-      const hmac = md5(`bankCode=${bank.name}&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
+      const hmac = md5(`bankCode=SWEN&time=${time}&secretKey=AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
       try {
         const ret = await axios.post(`${bank.host}/api/interbank/rsa-deposit`, {
           data: transactionDataBuffer,
@@ -162,15 +162,17 @@ router.post('/VerifyOTP', async (req, res) => {
           params: {
             hmac,
             time,
-            bankCode: bank.name
+            bankCode: 'SWEN'
           }
         })
         if (ret.data.payload.data.status === 'success') {
-          transactionData.status = 3
+          transactionData.status_id = 2
           transactionData.signature = ret.data.payload.data.signature
           transactionData.response_data = JSON.stringify(ret.data.payload.data.data)
           await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
         } else {
+          transactionData.status_id = 3
+          await transactionModel.update(transactionData.id, transactionData, transactionViewModel)
           return res.status(400).json({ status: 'fail' })
         }
       } catch (err) {
@@ -217,7 +219,7 @@ router.post('/', async (req, res) => {
   } else {
     const time = Date.now()
     const bank = await bankModel.findOne({ id: data.destination_bank_id }, 'host key'.split(' '))
-    const hmac = md5(`bankCode=SWEN&time=${time}&secretKey=TIMO_AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
+    const hmac = md5(`bankCode=SWEN&time=${time}&secretKey=AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
     const ret = await axios.get(`${bank.host}/api/interbank/get-account/${data.destination_account_number}`, {
       params: {
         hmac,

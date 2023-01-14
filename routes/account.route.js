@@ -4,6 +4,9 @@ import { accountViewModel } from '../view_models/account.viewModel.js'
 import currentUserMdw from '../middlewares/currentUser.mdw.js'
 import userModel from '../models/user.model.js'
 import { userViewModel } from '../view_models/user.viewModel.js'
+import bankModel from '../models/bank.model.js'
+import md5 from 'md5'
+import axios from 'axios'
 
 const router = express.Router()
 
@@ -57,6 +60,31 @@ router.get('/:accountNumber/Internal', async (req, res) => {
     return res.status(200).json({ status: 'success', data: { ...account, name: user.name } })
   }
   return res.status(204).json({ status: 'fail', message: 'Not found account' })
+})
+
+router.get('/:accountNumber/Bank/:bankId', async (req, res) => {
+  const { accountNumber, bankId } = req.params
+  const time = Date.now()
+  const bank = await bankModel.findOne({ id: bankId }, 'host key'.split(' '))
+  const hmac = md5(`bankCode=SWEN&time=${time}&secretKey=AUTHENTICATION_SERVER_SECRET_KEY_SWEN`)
+  const ret = await axios.get(`${bank.host}/api/interbank/get-account/${accountNumber}`, {
+    params: {
+      hmac,
+      time,
+      bankCode: 'SWEN'
+    }
+  })
+  console.log(ret)
+  if (ret.data.success) {
+    return res.json({
+      status: 'success',
+      data: {
+        name: ret.data.payload.accountOwnerName,
+        number: ret.data.payload.accountNumber
+      }
+    })
+  }
+  res.json({ status: 'fail', message: 'Not found account' })
 })
 
 export default router

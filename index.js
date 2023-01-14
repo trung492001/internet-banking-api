@@ -14,6 +14,7 @@ import receiverRoute from './routes/receiver.route.js'
 import transactionRoute from './routes/transaction.route.js'
 import debtReminderRoute from './routes/debtReminder.route.js'
 import externalRoute from './routes/external.route.js'
+import bankRoute from './routes/bank.route.js'
 
 const app = express()
 app.use(cors())
@@ -28,6 +29,7 @@ app.use('/Receivers', receiverRoute)
 app.use('/Transactions', transactionRoute)
 app.use('/DebtReminders', debtReminderRoute)
 app.use('/Api', externalRoute)
+app.use('/Banks', bankRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World')
