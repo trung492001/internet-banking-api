@@ -66,6 +66,7 @@ router.post('/DepositAccount', async (req, res) => {
             }
             let destinationAccount = await accountModel.findOne({ number: data.destination_account_number }, accountViewModel)
             if (destinationAccount) {
+              data.amount = parseInt(data.amount)
               let balance = destinationAccount.balance + data.amount
               if (data.fee_is_paid_by_receiver) balance -= data.fee
               destinationAccount = {
