@@ -308,13 +308,13 @@ router.get('/OtherBanks', async (req, res) => {
   if (currentUser.role_id !== 1) {
     return res.status(403).json({ message: 'You do not have permission to access the API!' })
   }
-  const bankInfo = await db('Banks');
+  const bankInfo = await db('Banks')
   // console.log("bankInfo: ", bankInfo);
   let from = new Date()
-  from = new Date(from.setMonth(from.getMonth() - 1));
+  from = new Date(from.setMonth(from.getMonth() - 1))
   // console.log("from: ", from);
   // console.log("to: ", new Date());
-  const result = await db('Transactions').where('source_bank_id', '>', 1).orWhere('destination_bank_id', '>', 1).whereBetween('created_at', [from, new Date()] ).orderBy('created_at', 'desc')
+  const result = await db('Transactions').where('source_bank_id', '>', 1).orWhere('destination_bank_id', '>', 1).whereBetween('created_at', [from, new Date()]).orderBy('created_at', 'desc')
   // console.log(result);
   result.forEach((item) => {
     const sourceBank = bankInfo.find((bank) => bank.id === item.source_bank_id)
