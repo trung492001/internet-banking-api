@@ -358,12 +358,12 @@
         }
       }
     },
-    "/Users/Employees/{empployeeID}": {
+    "/Users/Employees/{employeeID}": {
       "delete": {
         "tags": [
           "Users"
         ],
-        "summary": "Delete an empployee. Only admin can access this API",
+        "summary": "Delete an employee. Only admin can access this API",
         "parameters": [
           {
             "name": "x-access-token",
@@ -372,7 +372,7 @@
             "required": true
           },
           {
-            "name": "empployeeID",
+            "name": "employeeID",
             "in": "path",
             "required": true,
             "description": "ID of an employee",
