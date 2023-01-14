@@ -217,10 +217,11 @@ router.get('/Accounts', async (req, res) => {
 
 router.delete('/Account/:id', async (req, res) => {
   const currentUser = res.locals.currentUser
-  if (currentUser.role_id === 1) {
+  const id = req.params.id
+
+  if (currentUser.role_id === 1 || (currentUser.id !== +id && currentUser.role_id === 2)) {
     return res.status(403).json({ status: 'fail', message: 'You do not have permission to access the API!' })
   }
-  const id = req.params.id
   const account = await accountModel.findOne({ user_id: id }, accountViewModel)
 
   if (!account) {
